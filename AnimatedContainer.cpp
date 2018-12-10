@@ -1,11 +1,47 @@
 #include "AnimatedContainer.h"
 
-AnimatedContainer::AnimatedContainer(QWidget *p) : QWidget(p)
+extern "C" {
+#include <xdo.h>
+}
+
+AnimatedContainer::AnimatedContainer(WId windowId, QWidget *p) :
+    QWidget(p)
+{
+    embedWindow(windowId);
+}
+
+AnimatedContainer::AnimatedContainer(const QString &className, QWidget *p) :
+    QWidget(p)
+{
+    Window *windowList = nullptr;
+    unsigned int windowsNumber = 0;
+    const char* windowPattern = className.toStdString().c_str();
+
+    xdo_t * xdoInstance = xdo_new(nullptr);
+    xdo_search_t searchReq;
+    memset(&searchReq, 0, sizeof(xdo_search_t));
+    searchReq.max_depth = -1;
+    searchReq.require = xdo_search_t::SEARCH_ALL;
+    searchReq.winclassname = windowPattern;
+    searchReq.searchmask = SEARCH_CLASSNAME;
+    searchReq.limit = 0;
+
+    if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber))
+        qFatal("Couldn't find window");
+    xdo_free(xdoInstance);
+
+    if (windowsNumber == 1)
+        embedWindow(WId(windowList[0]));
+    else
+        qFatal("Error: Found %u window(s)", windowsNumber);
+}
+
+void AnimatedContainer::embedWindow(WId windowId)
 {
     auto size = QSize(360, 400);
     auto width = QApplication::desktop()->width();
 
-    auto existingWindow = QWindow::fromWinId(37748738);
+    auto existingWindow = QWindow::fromWinId(windowId);
     QWidget *container = QWidget::createWindowContainer(existingWindow, this);
 //    container->setFocusPolicy(Qt::TabFocus);
     container->resize(size);
@@ -33,6 +69,7 @@ void AnimatedContainer::slideInFinished()
 
 void AnimatedContainer::pauseFinished()
 {
+    // Do nothing yet
     //        connect(slideOut, SIGNAL(finished()), SLOT(slideOutFinished()));
     //        connect(slideOut, SIGNAL(finished()), slideOut, SLOT(deleteLater()));
 }

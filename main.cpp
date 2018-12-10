@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 //        return 1;
 //    }
 
-    AnimatedContainer w;
+    AnimatedContainer w("swc");
 //    w.setWindowFlag(Qt::X11BypassWindowManagerHint);
     w.setWindowFlag(Qt::WindowStaysOnTopHint);
 //    w.setWindowFlag(Qt::Desktop);

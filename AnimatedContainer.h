@@ -9,7 +9,11 @@ class AnimatedContainer: public QWidget
 {
     Q_OBJECT
 public:
-    AnimatedContainer(QWidget *p = nullptr);
+    AnimatedContainer(WId windowId, QWidget *p = nullptr);
+    AnimatedContainer(QString const& className, QWidget *p = nullptr);
+
+private:
+    void embedWindow(WId windowId);
 
 private slots:
     void slideInFinished();
