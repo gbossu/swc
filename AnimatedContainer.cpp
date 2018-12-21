@@ -36,19 +36,28 @@ AnimatedContainer::AnimatedContainer(const QString &className, QWidget *p) :
         qFatal("Error: Found %u window(s)", windowsNumber);
 }
 
+AnimatedContainer::~AnimatedContainer()
+{
+    QApplication::exit();
+}
+
+void AnimatedContainer::releaseWindow()
+{
+    existingWindow->setParent(nullptr);
+    container->setParent(nullptr);
+
+    existingWindow = nullptr;
+}
+
 void AnimatedContainer::embedWindow(WId windowId)
 {
     auto size = QSize(360, 400);
-    auto width = QApplication::desktop()->width();
+    auto width = QApplication::desktop()->width() - size.width();
 
-    auto existingWindow = QWindow::fromWinId(windowId);
-    QWidget *container = QWidget::createWindowContainer(existingWindow, this);
-//    container->setFocusPolicy(Qt::TabFocus);
+    existingWindow = QWindow::fromWinId(windowId);
+    container = QWidget::createWindowContainer(existingWindow, this);
     container->resize(size);
     container->show();
-
-    auto windowFlags = Qt::WindowFlags(Qt::BypassWindowManagerHint);
-//    container->setWindowFlags(windowFlags);
 
     // Start a slide from the top of the screen
     QPropertyAnimation *slideIn = new QPropertyAnimation(this, "pos");
@@ -58,7 +67,9 @@ void AnimatedContainer::embedWindow(WId windowId)
     slideIn->setEndValue(QPoint(width / 2, 0));
     slideIn->start();
     connect(slideIn, SIGNAL(finished()), SLOT(slideInFinished()));
-    connect(slideIn, SIGNAL(finished()), slideIn, SLOT(deleteLater()));
+    connect(slideIn, SIGNAL(finished()), this, SLOT(pauseFinished()));
+
+    this->setAttribute(Qt::WA_DeleteOnClose);
 }
 
 void AnimatedContainer::slideInFinished()
@@ -77,4 +88,10 @@ void AnimatedContainer::pauseFinished()
 void AnimatedContainer::slideOutFinished()
 {
     // Do nothing yet
+}
+
+void AnimatedContainer::closeEvent(QCloseEvent *event)
+{
+    releaseWindow();
+    event->accept();
 }
