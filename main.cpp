@@ -9,5 +9,8 @@ int main(int argc, char **argv)
     CommandLineParser parser;
     parser.process(app);
 
-    return app.exec();
+    if (parser.isOwningContainer())
+        return app.exec();
+    else
+        return 0;
 }

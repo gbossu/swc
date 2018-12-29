@@ -38,7 +38,6 @@ AnimatedContainer::AnimatedContainer(const QString &className, QWidget *p) :
 
 AnimatedContainer::~AnimatedContainer()
 {
-    QApplication::exit();
 }
 
 void AnimatedContainer::releaseWindow()
@@ -48,6 +47,19 @@ void AnimatedContainer::releaseWindow()
     container->setParent(nullptr);
 
     existingWindow = nullptr;
+}
+
+void AnimatedContainer::animate()
+{
+    // Start a slide from the top of the screen
+    QPropertyAnimation *slideIn = new QPropertyAnimation(this, "size");
+    slideIn->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
+    slideIn->setDuration(400);
+    slideIn->setStartValue(size());
+    slideIn->setEndValue(reverseSlide ? minimumSize() : maximumSize());
+    reverseSlide = !reverseSlide;
+    slideIn->start();
+    connect(slideIn, SIGNAL(finished()), SLOT(slideInFinished()));
 }
 
 void AnimatedContainer::embedWindow(WId windowId)
@@ -67,17 +79,10 @@ void AnimatedContainer::embedWindow(WId windowId)
     container = QWidget::createWindowContainer(existingWindow, this);
     container->resize(originalSize);
 
-    // Start a slide from the top of the screen
-    QPropertyAnimation *slideIn = new QPropertyAnimation(this, "size");
-    slideIn->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
-    slideIn->setDuration(400);
-    slideIn->setStartValue(size);
-    slideIn->setEndValue(originalSize);
-    slideIn->start();
-    connect(slideIn, SIGNAL(finished()), SLOT(slideInFinished()));
-
-    // Delete the container when it is closed
-    this->setAttribute(Qt::WA_DeleteOnClose);
+    // By default when embedding, the window will be hidden
+    // It will "slide" after a call to animate
+    this->resize(size);
+    reverseSlide = false;
 }
 
 void AnimatedContainer::slideInFinished()
@@ -100,4 +105,5 @@ void AnimatedContainer::closeEvent(QCloseEvent *event)
 {
     releaseWindow();
     event->accept();
+    QApplication::exit();
 }

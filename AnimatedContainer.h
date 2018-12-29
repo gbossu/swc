@@ -13,12 +13,16 @@ public:
     virtual ~AnimatedContainer() override;
     void releaseWindow();
 
+public slots:
+    void animate();
+
 private:
     void embedWindow(WId windowId);
 
     QPointer<QWindow> existingWindow;
     QPointer<QWidget> container;
     QSize originalSize;
+    bool reverseSlide;
 
 private slots:
     void slideInFinished();

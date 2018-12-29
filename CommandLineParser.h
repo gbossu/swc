@@ -2,7 +2,6 @@
 #define COMMANDLINEPARSER_H
 
 #include <QCommandLineParser>
-#include <QPointer>
 #include <QCoreApplication>
 
 class AnimatedContainer;
@@ -19,14 +18,23 @@ public:
     CommandLineParser();
 
     /**
+     * Properly detructs the parser by detaching shared memory
+     */
+    ~CommandLineParser();
+
+    /**
      * Processes the app arguments and acts accordingly.
      *
      * @param app The Qt application
      */
     void process(QCoreApplication const& app);
 
+    bool isOwningContainer() const;
+
 private:
-    QPointer<AnimatedContainer> container;
+    AnimatedContainer *container;
+    bool owningContainer;
+    QString swcKey;
     QCommandLineParser parser;
 };
 
