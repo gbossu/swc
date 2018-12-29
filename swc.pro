@@ -26,10 +26,13 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-    AnimatedContainer.cpp
+    AnimatedContainer.cpp \
+    CommandLineParser.cpp
 
 HEADERS += \
-    AnimatedContainer.h
+    AnimatedContainer.h \
+    CommandLineParser.h \
+    cloptions.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
