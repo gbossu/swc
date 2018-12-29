@@ -18,6 +18,7 @@ private:
 
     QPointer<QWindow> existingWindow;
     QPointer<QWidget> container;
+    QSize originalSize;
 
 private slots:
     void slideInFinished();

@@ -44,6 +44,7 @@ AnimatedContainer::~AnimatedContainer()
 void AnimatedContainer::releaseWindow()
 {
     existingWindow->setParent(nullptr);
+    existingWindow->setFramePosition(this->pos());
     container->setParent(nullptr);
 
     existingWindow = nullptr;
@@ -51,38 +52,43 @@ void AnimatedContainer::releaseWindow()
 
 void AnimatedContainer::embedWindow(WId windowId)
 {
-    auto size = QSize(360, 400);
+    originalSize = QSize(360, 400);
+    auto size = QSize(originalSize.width(), 0);
     auto width = QApplication::desktop()->width() - size.width();
+    auto pos = QPoint(width / 2, 0);
 
+    // Place the animated container
+    this->setMinimumSize(size);
+    this->setMaximumSize(originalSize);
+    this->move(pos);
+
+    // Embed the window using the windowId
     existingWindow = QWindow::fromWinId(windowId);
     container = QWidget::createWindowContainer(existingWindow, this);
-    container->resize(size);
-    container->show();
+    container->resize(originalSize);
 
     // Start a slide from the top of the screen
-    QPropertyAnimation *slideIn = new QPropertyAnimation(this, "pos");
+    QPropertyAnimation *slideIn = new QPropertyAnimation(this, "size");
     slideIn->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
     slideIn->setDuration(400);
-    slideIn->setStartValue(QPoint(width / 2, -200));
-    slideIn->setEndValue(QPoint(width / 2, 0));
+    slideIn->setStartValue(size);
+    slideIn->setEndValue(originalSize);
     slideIn->start();
     connect(slideIn, SIGNAL(finished()), SLOT(slideInFinished()));
-    connect(slideIn, SIGNAL(finished()), this, SLOT(pauseFinished()));
 
+    // Delete the container when it is closed
     this->setAttribute(Qt::WA_DeleteOnClose);
 }
 
 void AnimatedContainer::slideInFinished()
 {
     // Wait some time
-    QTimer::singleShot(3000, this, SLOT(pauseFinished()));
+    QTimer::singleShot(1000, this, SLOT(pauseFinished()));
 }
 
 void AnimatedContainer::pauseFinished()
 {
     // Do nothing yet
-    //        connect(slideOut, SIGNAL(finished()), SLOT(slideOutFinished()));
-    //        connect(slideOut, SIGNAL(finished()), slideOut, SLOT(deleteLater()));
 }
 
 void AnimatedContainer::slideOutFinished()
