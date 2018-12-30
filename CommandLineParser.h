@@ -33,7 +33,6 @@ public:
 
 private:
     AnimatedContainer *container;
-    bool owningContainer;
     QString swcKey;
     QCommandLineParser parser;
 };
