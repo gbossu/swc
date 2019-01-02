@@ -4,6 +4,7 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QProcess>
+#include "Settings.h"
 
 class AnimatedContainer;
 
@@ -34,6 +35,7 @@ public:
 
 private:
     AnimatedContainer *container;
+    Settings settings;
     QString swcKey;
     QCommandLineParser parser;
     QProcess executable;

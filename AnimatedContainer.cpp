@@ -1,35 +1,36 @@
 #include "AnimatedContainer.h"
+#include "Settings.h"
 #include <QThread>
 
-AnimatedContainer::AnimatedContainer(WId windowId, QWidget *p) :
-    QWidget(p)
+AnimatedContainer::AnimatedContainer(Settings *settings, WId windowId, QWidget *p) :
+    QWidget(p), settings(settings)
 {
     embedWindow(windowId);
 }
 
-AnimatedContainer::AnimatedContainer(const QString &className, QWidget *p) :
-    QWidget(p)
+AnimatedContainer::AnimatedContainer(Settings *settings, const QString &className, QWidget *p) :
+    QWidget(p), settings(settings)
 {
     const char* windowPattern = className.toStdString().c_str();
     xdo_search_t searchReq = createSearchRequest();
 
     searchReq.winclassname = windowPattern;
     searchReq.searchmask = SEARCH_CLASSNAME;
-    embedWindow(searchWindow(searchReq));
+    embedWindow(searchWindow(searchReq, settings->getInt("lookup/max_tries")));
 }
 
-AnimatedContainer::AnimatedContainer(int pid, unsigned int maxTries, QWidget *p) :
-    QWidget(p)
+AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QWidget *p) :
+    QWidget(p), settings(settings)
 {
     xdo_search_t searchReq = createSearchRequest();
 
     searchReq.pid = pid;
     searchReq.searchmask = SEARCH_PID;
-    embedWindow(searchWindow(searchReq, maxTries));
+    embedWindow(searchWindow(searchReq, settings->getInt("lookup/max_tries")));
 }
 
-AnimatedContainer::AnimatedContainer(int pid, QString const& className, unsigned int maxTries, QWidget *p) :
-    QWidget(p)
+AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QString const& className, QWidget *p) :
+    QWidget(p), settings(settings)
 {
     const char* windowPattern = className.toStdString().c_str();
     xdo_search_t searchReq = createSearchRequest();
@@ -37,7 +38,7 @@ AnimatedContainer::AnimatedContainer(int pid, QString const& className, unsigned
     searchReq.pid = pid;
     searchReq.winclassname = windowPattern;
     searchReq.searchmask = SEARCH_PID | SEARCH_CLASSNAME;
-    embedWindow(searchWindow(searchReq, maxTries));
+    embedWindow(searchWindow(searchReq, settings->getInt("lookup/max_tries")));
 }
 
 AnimatedContainer::~AnimatedContainer()
@@ -106,12 +107,18 @@ xdo_search_t AnimatedContainer::createSearchRequest()
     return searchReq;
 }
 
-WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq, unsigned int maxTries)
+WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq, int maxTries)
 {
     Window *windowList = nullptr;
     unsigned int windowsNumber = 0;
-    xdo_t * xdoInstance = xdo_new(nullptr);
 
+    // Get the sleep time from settings
+    const int tryInterval = settings->getInt("lookup/try_interval");
+    if (tryInterval < 0)
+        qFatal("Error: negative try_interval time in config file");
+    const unsigned int sleepTime = static_cast<unsigned int>(tryInterval);
+
+    xdo_t * xdoInstance = xdo_new(nullptr);
     while (maxTries > 0) {
         if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber)) {
             xdo_free(xdoInstance);
@@ -126,7 +133,7 @@ WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq, unsigned int 
             qFatal("Error: Found %u window(s)", windowsNumber);
         }
         --maxTries;
-        QThread::msleep(1);
+        QThread::msleep(sleepTime);
     }
     xdo_free(xdoInstance);
     qFatal("Error: Found no window");

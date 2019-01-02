@@ -48,6 +48,7 @@ void CommandLineParser::process(const QCoreApplication &app)
             return;
         }
 
+        // Extract the program and its arguments
         QStringList args = parser.value(cloptions::binary).split(" ");
         if (args.size() == 0) {
             qWarning("Error: No binary file was given.");
@@ -59,25 +60,30 @@ void CommandLineParser::process(const QCoreApplication &app)
         executable.start();
         executable.waitForStarted();
 
+        // Then create the container using the PID (and maybe the classname
+        // as well).
         container = parser.isSet(cloptions::className) ?
-                    new AnimatedContainer(int(executable.processId()),
-                                          parser.value(cloptions::className),
-                                          25) :
-                    new AnimatedContainer(int(executable.processId()), 25);
+                    new AnimatedContainer(&settings,
+                                          int(executable.processId()),
+                                          parser.value(cloptions::className)) :
+                    new AnimatedContainer(&settings,
+                                          int(executable.processId()));
         foundOption = true;
     } else if (parser.isSet(cloptions::pid)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
             return;
         }
-        container = new AnimatedContainer(parser.value(cloptions::pid).toInt());
+        container = new AnimatedContainer(&settings,
+                                          parser.value(cloptions::pid).toInt());
         foundOption = true;
     } else if (parser.isSet(cloptions::className)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
             return;
         }
-        container = new AnimatedContainer(parser.value(cloptions::className));
+        container = new AnimatedContainer(&settings,
+                                          parser.value(cloptions::className));
         foundOption = true;
     }
 

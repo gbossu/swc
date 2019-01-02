@@ -8,14 +8,16 @@ extern "C" {
 #include <xdo.h>
 }
 
+class Settings;
+
 class AnimatedContainer: public QWidget
 {
     Q_OBJECT
 public:
-    AnimatedContainer(WId windowId, QWidget *p = nullptr);
-    AnimatedContainer(QString const& className, QWidget *p = nullptr);
-    AnimatedContainer(int pid, unsigned int maxTries = 1, QWidget *p = nullptr);
-    AnimatedContainer(int pid, QString const& className, unsigned int maxTries = 1, QWidget *p = nullptr);
+    AnimatedContainer(Settings *settings, WId windowId, QWidget *p = nullptr);
+    AnimatedContainer(Settings *settings, QString const& className, QWidget *p = nullptr);
+    AnimatedContainer(Settings *settings, int pid, QWidget *p = nullptr);
+    AnimatedContainer(Settings *settings, int pid, QString const& className, QWidget *p = nullptr);
     virtual ~AnimatedContainer() override;
     void releaseWindow();
 
@@ -25,10 +27,11 @@ public slots:
 private:
     void embedWindow(WId windowId);
     xdo_search_t createSearchRequest();
-    WId searchWindow(xdo_search_t const& searchReq, unsigned int maxTries = 1);
+    WId searchWindow(xdo_search_t const& searchReq, int maxTries);
 
     QPointer<QWindow> existingWindow;
     QPointer<QWidget> container;
+    Settings *settings;
     QSize originalSize;
     bool reverseSlide;
 
