@@ -54,6 +54,11 @@ void AnimatedContainer::releaseWindow()
     existingWindow = nullptr;
 }
 
+bool AnimatedContainer::hasWindow() const
+{
+    return container != nullptr;
+}
+
 void AnimatedContainer::animate()
 {
     // Resize the window to its original size
@@ -76,15 +81,35 @@ void AnimatedContainer::animate()
 
 void AnimatedContainer::embedWindow(WId windowId)
 {
-    originalSize = QSize(360, 400);
+    // Get the size
+    const QString sizeType = settings->getString("container/size_type");
+    if (sizeType == "absolute")
+        originalSize = settings->getSize("container/size");
+    else {
+        qWarning("Error: size_type setting not recognized");
+        return;
+    }
     auto size = QSize(originalSize.width(), 0);
-    auto width = QApplication::desktop()->width() - size.width();
-    auto pos = QPoint(width / 2, 0);
+
+    // Get the position
+    QPointF pos;
+    const QString positionType = settings->getString("container/position_type");
+    if (positionType == "absolute")
+        pos = settings->getPoint("container/position");
+    else if (positionType == "percent") {
+        auto desktopSize = QApplication::desktop()->size();
+        auto percents = settings->getPoint("container/position");
+        pos.setX(desktopSize.width() * (percents.x() / 100.));
+        pos.setY(desktopSize.height() * (percents.y() / 100.));
+    } else {
+        qWarning("Error: position_type setting not recognized");
+        return;
+    }
 
     // Place the animated container
     this->setMinimumSize(size);
     this->setMaximumSize(originalSize);
-    this->move(pos);
+    this->move(pos.toPoint());
 
     // Embed the window using the windowId
     existingWindow = QWindow::fromWinId(windowId);

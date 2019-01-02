@@ -8,6 +8,8 @@ Settings::Settings(const QString &fileName) :
     settingsMap["container/position_type"] = "percent";
     settingsMap["container/position"] = QPoint(50, 0);
     settingsMap["container/offset"] = QPoint(0, 0);
+    settingsMap["container/size_type"] = "absolute";
+    settingsMap["container/size"] = QSize(100, 100); // Some dummy size
 
     // Default settings for the animation
     settingsMap["animation/direction"] = "down";
@@ -50,4 +52,9 @@ QString Settings::getString(const QString &key) const
 QPoint Settings::getPoint(const QString &key) const
 {
     return settingsMap[key].toPoint();
+}
+
+QSize Settings::getSize(const QString &key) const
+{
+    return settingsMap[key].toSize();
 }

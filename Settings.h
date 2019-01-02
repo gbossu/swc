@@ -3,6 +3,7 @@
 
 #include <QSettings>
 #include <QPoint>
+#include <QSize>
 
 class Settings
 {
@@ -21,6 +22,7 @@ public:
     int getInt(QString const& key) const;
     QString getString(QString const& key) const;
     QPoint getPoint(QString const& key) const;
+    QSize getSize(QString const& key) const;
 
 private:
     QString fileName;

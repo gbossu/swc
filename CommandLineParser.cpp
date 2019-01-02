@@ -115,5 +115,5 @@ void CommandLineParser::process(const QCoreApplication &app)
 
 bool CommandLineParser::isOwningContainer() const
 {
-    return container != nullptr;
+    return container != nullptr && container->hasWindow();
 }

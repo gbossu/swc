@@ -20,6 +20,7 @@ public:
     AnimatedContainer(Settings *settings, int pid, QString const& className, QWidget *p = nullptr);
     virtual ~AnimatedContainer() override;
     void releaseWindow();
+    bool hasWindow() const;
 
 public slots:
     void animate();
