@@ -1,9 +1,3 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2018-12-03T00:51:23
-#
-#-------------------------------------------------
-
 QT       += core gui dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -27,12 +21,14 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
     AnimatedContainer.cpp \
-    CommandLineParser.cpp
+    CommandLineParser.cpp \
+    Settings.cpp
 
 HEADERS += \
     AnimatedContainer.h \
     CommandLineParser.h \
-    cloptions.h
+    cloptions.h \
+    Settings.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
