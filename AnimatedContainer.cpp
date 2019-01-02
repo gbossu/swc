@@ -1,4 +1,5 @@
 #include "AnimatedContainer.h"
+#include <QThread>
 
 AnimatedContainer::AnimatedContainer(WId windowId, QWidget *p) :
     QWidget(p)
@@ -17,17 +18,17 @@ AnimatedContainer::AnimatedContainer(const QString &className, QWidget *p) :
     embedWindow(searchWindow(searchReq));
 }
 
-AnimatedContainer::AnimatedContainer(int pid, QWidget *p) :
+AnimatedContainer::AnimatedContainer(int pid, unsigned int maxTries, QWidget *p) :
     QWidget(p)
 {
     xdo_search_t searchReq = createSearchRequest();
 
     searchReq.pid = pid;
     searchReq.searchmask = SEARCH_PID;
-    embedWindow(searchWindow(searchReq));
+    embedWindow(searchWindow(searchReq, maxTries));
 }
 
-AnimatedContainer::AnimatedContainer(int pid, QString const& className, QWidget *p) :
+AnimatedContainer::AnimatedContainer(int pid, QString const& className, unsigned int maxTries, QWidget *p) :
     QWidget(p)
 {
     const char* windowPattern = className.toStdString().c_str();
@@ -36,7 +37,7 @@ AnimatedContainer::AnimatedContainer(int pid, QString const& className, QWidget 
     searchReq.pid = pid;
     searchReq.winclassname = windowPattern;
     searchReq.searchmask = SEARCH_PID | SEARCH_CLASSNAME;
-    embedWindow(searchWindow(searchReq));
+    embedWindow(searchWindow(searchReq, maxTries));
 }
 
 AnimatedContainer::~AnimatedContainer()
@@ -54,6 +55,11 @@ void AnimatedContainer::releaseWindow()
 
 void AnimatedContainer::animate()
 {
+    // Resize the window to its original size
+    // It is needed to avoid artifacts happening when the container is
+    // created before the window is rendered
+    existingWindow->resize(originalSize);
+
     // Start a slide from the top of the screen
     QPropertyAnimation *slideIn = new QPropertyAnimation(this, "size");
     slideIn->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
@@ -62,6 +68,8 @@ void AnimatedContainer::animate()
     slideIn->setEndValue(reverseSlide ? minimumSize() : maximumSize());
     reverseSlide = !reverseSlide;
     slideIn->start();
+
+    // Call slideInFinished when the animation has finished
     connect(slideIn, SIGNAL(finished()), SLOT(slideInFinished()));
 }
 
@@ -98,22 +106,30 @@ xdo_search_t AnimatedContainer::createSearchRequest()
     return searchReq;
 }
 
-WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq)
+WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq, unsigned int maxTries)
 {
     Window *windowList = nullptr;
     unsigned int windowsNumber = 0;
     xdo_t * xdoInstance = xdo_new(nullptr);
 
-    if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber)) {
-        xdo_free(xdoInstance);
-        qFatal("Error: Couldn't find window");
+    while (maxTries > 0) {
+        if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber)) {
+            xdo_free(xdoInstance);
+            qFatal("Error: Couldn't perform window search");
+        }
+
+        if (windowsNumber == 1) {
+            xdo_free(xdoInstance);
+            return WId(windowList[0]);
+        } else if (windowsNumber > 1) {
+            xdo_free(xdoInstance);
+            qFatal("Error: Found %u window(s)", windowsNumber);
+        }
+        --maxTries;
+        QThread::msleep(1);
     }
     xdo_free(xdoInstance);
-
-    if (windowsNumber == 1)
-        return WId(windowList[0]);
-    else
-        qFatal("Error: Found %u window(s)", windowsNumber);
+    qFatal("Error: Found no window");
 }
 
 void AnimatedContainer::slideInFinished()

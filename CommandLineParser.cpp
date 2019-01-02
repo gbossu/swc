@@ -20,6 +20,10 @@ CommandLineParser::~CommandLineParser()
 {
     if (container)
         delete container;
+    if (executable.state() == QProcess::Running) {
+        executable.kill();
+        executable.waitForFinished();
+    }
 }
 
 void CommandLineParser::process(const QCoreApplication &app)
@@ -57,8 +61,9 @@ void CommandLineParser::process(const QCoreApplication &app)
 
         container = parser.isSet(cloptions::className) ?
                     new AnimatedContainer(int(executable.processId()),
-                                          parser.value(cloptions::className)) :
-                    new AnimatedContainer(int(executable.processId()));
+                                          parser.value(cloptions::className),
+                                          25) :
+                    new AnimatedContainer(int(executable.processId()), 25);
         foundOption = true;
     } else if (parser.isSet(cloptions::pid)) {
         if (iface.isValid()) {
