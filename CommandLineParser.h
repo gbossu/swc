@@ -3,6 +3,7 @@
 
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QProcess>
 
 class AnimatedContainer;
 
@@ -35,6 +36,7 @@ private:
     AnimatedContainer *container;
     QString swcKey;
     QCommandLineParser parser;
+    QProcess executable;
 };
 
 #endif // COMMANDLINEPARSER_H

@@ -12,6 +12,8 @@ CommandLineParser::CommandLineParser() :
     parser.addHelpOption();
 
     parser.addOption(cloptions::className);
+    parser.addOption(cloptions::pid);
+    parser.addOption(cloptions::binary);
 }
 
 CommandLineParser::~CommandLineParser()
@@ -30,14 +32,46 @@ void CommandLineParser::process(const QCoreApplication &app)
         qWarning("Error: no swc-key given.\n");
         parser.showHelp();
     }
-    swcKey = "org.swc." + parser.positionalArguments().at(0);
 
+    // Otherwise, try to "connect" to an existing swc instance
+    swcKey = "org.swc." + parser.positionalArguments().at(0);
     QDBusInterface iface(swcKey, "/", "", QDBusConnection::sessionBus());
 
     // Check the options for creating a container
-    if (!foundOption && parser.isSet(cloptions::className)) {
-        if (iface.isValid())
-            qFatal("Trying to reuse an swc-key for a new container");
+    if (parser.isSet(cloptions::binary)) {
+        if (iface.isValid()) {
+            qWarning("Error: Trying to reuse an swc-key for a new container.");
+            return;
+        }
+
+        QStringList args = parser.value(cloptions::binary).split(" ");
+        if (args.size() == 0) {
+            qWarning("Error: No binary file was given.");
+            return;
+        }
+        executable.setProgram(args.front());
+        args.pop_front();
+        executable.setArguments(args);
+        executable.start();
+        executable.waitForStarted();
+
+        container = parser.isSet(cloptions::className) ?
+                    new AnimatedContainer(int(executable.processId()),
+                                          parser.value(cloptions::className)) :
+                    new AnimatedContainer(int(executable.processId()));
+        foundOption = true;
+    } else if (parser.isSet(cloptions::pid)) {
+        if (iface.isValid()) {
+            qWarning("Error: Trying to reuse an swc-key for a new container.");
+            return;
+        }
+        container = new AnimatedContainer(parser.value(cloptions::pid).toInt());
+        foundOption = true;
+    } else if (parser.isSet(cloptions::className)) {
+        if (iface.isValid()) {
+            qWarning("Error: Trying to reuse an swc-key for a new container.");
+            return;
+        }
         container = new AnimatedContainer(parser.value(cloptions::className));
         foundOption = true;
     }
@@ -45,8 +79,8 @@ void CommandLineParser::process(const QCoreApplication &app)
     // Exit if no option was found to create a container
     // AND there is no valid DBus to communicate with an existing one
     if (!foundOption && !iface.isValid()) {
-        qWarning("Error: No existing container with this swc-key.\n");
-        parser.showHelp();
+        qWarning("Error: No existing container with this swc-key.");
+        return;
     }
 
     // If we hold the container, prepare the DBus for receiving signals

@@ -1,9 +1,5 @@
 #include "AnimatedContainer.h"
 
-extern "C" {
-#include <xdo.h>
-}
-
 AnimatedContainer::AnimatedContainer(WId windowId, QWidget *p) :
     QWidget(p)
 {
@@ -13,27 +9,34 @@ AnimatedContainer::AnimatedContainer(WId windowId, QWidget *p) :
 AnimatedContainer::AnimatedContainer(const QString &className, QWidget *p) :
     QWidget(p)
 {
-    Window *windowList = nullptr;
-    unsigned int windowsNumber = 0;
     const char* windowPattern = className.toStdString().c_str();
+    xdo_search_t searchReq = createSearchRequest();
 
-    xdo_t * xdoInstance = xdo_new(nullptr);
-    xdo_search_t searchReq;
-    memset(&searchReq, 0, sizeof(xdo_search_t));
-    searchReq.max_depth = -1;
-    searchReq.require = xdo_search_t::SEARCH_ALL;
     searchReq.winclassname = windowPattern;
     searchReq.searchmask = SEARCH_CLASSNAME;
-    searchReq.limit = 0;
+    embedWindow(searchWindow(searchReq));
+}
 
-    if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber))
-        qFatal("Couldn't find window");
-    xdo_free(xdoInstance);
+AnimatedContainer::AnimatedContainer(int pid, QWidget *p) :
+    QWidget(p)
+{
+    xdo_search_t searchReq = createSearchRequest();
 
-    if (windowsNumber == 1)
-        embedWindow(WId(windowList[0]));
-    else
-        qFatal("Error: Found %u window(s)", windowsNumber);
+    searchReq.pid = pid;
+    searchReq.searchmask = SEARCH_PID;
+    embedWindow(searchWindow(searchReq));
+}
+
+AnimatedContainer::AnimatedContainer(int pid, QString const& className, QWidget *p) :
+    QWidget(p)
+{
+    const char* windowPattern = className.toStdString().c_str();
+    xdo_search_t searchReq = createSearchRequest();
+
+    searchReq.pid = pid;
+    searchReq.winclassname = windowPattern;
+    searchReq.searchmask = SEARCH_PID | SEARCH_CLASSNAME;
+    embedWindow(searchWindow(searchReq));
 }
 
 AnimatedContainer::~AnimatedContainer()
@@ -83,6 +86,34 @@ void AnimatedContainer::embedWindow(WId windowId)
     // It will "slide" after a call to animate
     this->resize(size);
     reverseSlide = false;
+}
+
+xdo_search_t AnimatedContainer::createSearchRequest()
+{
+    xdo_search_t searchReq;
+    memset(&searchReq, 0, sizeof(xdo_search_t));
+    searchReq.max_depth = -1;
+    searchReq.require = xdo_search_t::SEARCH_ANY;
+    searchReq.limit = 0;
+    return searchReq;
+}
+
+WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq)
+{
+    Window *windowList = nullptr;
+    unsigned int windowsNumber = 0;
+    xdo_t * xdoInstance = xdo_new(nullptr);
+
+    if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber)) {
+        xdo_free(xdoInstance);
+        qFatal("Error: Couldn't find window");
+    }
+    xdo_free(xdoInstance);
+
+    if (windowsNumber == 1)
+        return WId(windowList[0]);
+    else
+        qFatal("Error: Found %u window(s)", windowsNumber);
 }
 
 void AnimatedContainer::slideInFinished()
