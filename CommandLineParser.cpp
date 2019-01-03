@@ -11,6 +11,7 @@ CommandLineParser::CommandLineParser() :
                                  "The unique swc-key this container should use");
     parser.addHelpOption();
 
+    // Input options
     parser.addOption(cloptions::className);
     parser.addOption(cloptions::pid);
     parser.addOption(cloptions::binary);
@@ -28,7 +29,10 @@ CommandLineParser::~CommandLineParser()
 
 void CommandLineParser::process(const QCoreApplication &app)
 {
-    bool foundOption = false;
+    /********
+     * Process positional arguments
+     ********/
+
     parser.process(app);
 
     // Exit if no swc-key was given
@@ -41,7 +45,22 @@ void CommandLineParser::process(const QCoreApplication &app)
     swcKey = "org.swc." + parser.positionalArguments().at(0);
     QDBusInterface iface(swcKey, "/", "", QDBusConnection::sessionBus());
 
-    // Check the options for creating a container
+    // If only an swc-key was given, and if an swc instance exists with
+    // this name, then we send an "animate" request
+    if (parser.optionNames().empty()) {
+        if (iface.isValid())
+            iface.call("animate");
+        else
+            qWarning("Error: No existing container with this swc-key.");
+        return;
+    }
+
+
+    /********
+     * Process input options
+     ********/
+
+    // Check all the supported input options for creating a container
     if (parser.isSet(cloptions::binary)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
@@ -68,7 +87,6 @@ void CommandLineParser::process(const QCoreApplication &app)
                                           parser.value(cloptions::className)) :
                     new AnimatedContainer(&settings,
                                           int(executable.processId()));
-        foundOption = true;
     } else if (parser.isSet(cloptions::pid)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
@@ -76,7 +94,6 @@ void CommandLineParser::process(const QCoreApplication &app)
         }
         container = new AnimatedContainer(&settings,
                                           parser.value(cloptions::pid).toInt());
-        foundOption = true;
     } else if (parser.isSet(cloptions::className)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
@@ -84,32 +101,36 @@ void CommandLineParser::process(const QCoreApplication &app)
         }
         container = new AnimatedContainer(&settings,
                                           parser.value(cloptions::className));
-        foundOption = true;
-    }
-
-    // Exit if no option was found to create a container
-    // AND there is no valid DBus to communicate with an existing one
-    if (!foundOption && !iface.isValid()) {
-        qWarning("Error: No existing container with this swc-key.");
+    }  else {
+        // Exit if no option was found to create a container
+        if (iface.isValid())
+            qWarning("Error: Options were provided for toggling a container.");
+        else
+            qWarning("Error: No input option was provided to create a container.");
         return;
     }
 
-    // If we hold the container, prepare the DBus for receiving signals
-    if (container && container->hasWindow()) {
+
+    /********
+     * Register a service on the DBus
+     ********/
+
+    // If we created a valid container, prepare the DBus for receiving signals
+    if (container->hasWindow()) {
+
         // Initialize the DBus
         if (!QDBusConnection::sessionBus().registerService(swcKey))
             qFatal("Could not register service on DBus");
         QDBusConnection::sessionBus()
                 .registerObject("/", container, QDBusConnection::ExportAllSlots);
 
-    //    container->setWindowFlag(Qt::X11BypassWindowManagerHint);
-        container->setWindowFlag(Qt::WindowStaysOnTopHint);
+        // Finally display the container
         container->show();
     }
 
-    // Otherwise, we send a signal to the DBus
+    // Otherwise, something failed when creating the container
     else {
-        auto reply = iface.call("animate");
+        // Do nothing for now
     }
 }
 

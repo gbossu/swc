@@ -31,6 +31,9 @@ public:
      */
     void process(QCoreApplication const& app);
 
+    /**
+     * @return true if this swc instance is owning a valid container
+     */
     bool isOwningContainer() const;
 
 private:
