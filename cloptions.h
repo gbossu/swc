@@ -26,5 +26,21 @@ namespace cloptions {
             "Binary file (and its parameters) that should be embedded",
             "binary");
 /// @}
+
+/// @name Additional options for customizing container
+/// @{
+
+    /** Specify the size of the container */
+    const QCommandLineOption size(
+            QStringList() << "S" << "size",
+            "Size of the container ('w,h' or 'auto')",
+            "size");
+
+    /** Specify the position of the container */
+    const QCommandLineOption position(
+            QStringList() << "P" << "position",
+            "Position of the container ('x,y')",
+            "position");
+/// @}
 }
 #endif // COMMANDLINEOPTIONS_H

@@ -58,3 +58,8 @@ QSize Settings::getSize(const QString &key) const
 {
     return settingsMap[key].toSize();
 }
+
+void Settings::setValue(const QString &key, const QVariant &value)
+{
+    settingsMap[key] = value;
+}

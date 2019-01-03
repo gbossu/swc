@@ -24,6 +24,8 @@ public:
     QPoint getPoint(QString const& key) const;
     QSize getSize(QString const& key) const;
 
+    void setValue(QString const& key, QVariant const& value);
+
 private:
     QString fileName;
     QMap<QString, QVariant> settingsMap;

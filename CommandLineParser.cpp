@@ -15,6 +15,10 @@ CommandLineParser::CommandLineParser() :
     parser.addOption(cloptions::className);
     parser.addOption(cloptions::pid);
     parser.addOption(cloptions::binary);
+
+    // Additional options
+    parser.addOption(cloptions::size);
+    parser.addOption(cloptions::position);
 }
 
 CommandLineParser::~CommandLineParser()
@@ -55,6 +59,36 @@ void CommandLineParser::process(const QCoreApplication &app)
         return;
     }
 
+
+    /********
+     * Process cutomization options
+     ********/
+
+    if (parser.isSet(cloptions::size)) {
+        auto values = parser.value(cloptions::size).split(",");
+        if (values.size() == 2) {
+            settings.setValue("container/size_type", "absolute");
+            settings.setValue("container/size", QSize(values.at(0).toInt(),
+                                                      values.at(1).toInt()));
+        } else if (values.size() == 1 && values.at(0) == "auto") {
+            settings.setValue("container/size_type", "auto");
+        } else {
+            qWarning("Error: invalid format for size, please use "
+                     "either 'width,height' or 'auto'");
+            return;
+        }
+    }
+
+    if (parser.isSet(cloptions::position)) {
+        auto values = parser.value(cloptions::position).split(",");
+        if (values.size() != 2) {
+            qWarning("Error: invalid format for position, please use 'x,y'");
+            return;
+        }
+        settings.setValue("container/position", QSize(values.at(0).toInt(),
+                                                      values.at(1).toInt()));
+        settings.setValue("container/position_type", "absolute");
+    }
 
     /********
      * Process input options
