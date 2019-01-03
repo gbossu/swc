@@ -71,17 +71,8 @@ void AnimatedContainer::animate()
     // created before the window is rendered
     existingWindow->resize(originalSize);
 
-    // Start a slide from the top of the screen
-    QPropertyAnimation *slideIn = new QPropertyAnimation(this, "size");
-    slideIn->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
-    slideIn->setDuration(400);
-    slideIn->setStartValue(size());
-    slideIn->setEndValue(reverseSlide ? minimumSize() : maximumSize());
-    reverseSlide = !reverseSlide;
-    slideIn->start();
-
-    // Call slideInFinished when the animation has finished
-    connect(slideIn, SIGNAL(finished()), SLOT(slideInFinished()));
+    // Request change of state
+    emit needAnimate();
 }
 
 void AnimatedContainer::embedWindow(WId windowId)
@@ -126,7 +117,34 @@ void AnimatedContainer::embedWindow(WId windowId)
     // By default when embedding, the window will be hidden
     // It will "slide" after a call to animate
     this->resize(size);
-    reverseSlide = false;
+
+    // Initialize and start the state machine
+    initSlideMachine();
+    slideMachine->start();
+}
+
+void AnimatedContainer::initSlideMachine()
+{
+    // Create the slide machine with two states: hidden and visible
+    slideMachine = new QStateMachine;
+    auto stateHidden = new QState(slideMachine);
+    stateHidden->assignProperty(this, "size", this->minimumSize());
+    auto stateVisible = new QState(slideMachine);
+    stateVisible->assignProperty(this, "size", originalSize);
+    slideMachine->setInitialState(stateHidden);
+
+    // Create the transitions
+    stateHidden->addTransition(this, SIGNAL(needAnimate()), stateVisible);
+    stateVisible->addTransition(this, SIGNAL(needAnimate()), stateHidden);
+
+    // Add a transition animation
+    auto slide = new QPropertyAnimation(this, "size");
+    slide->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
+    slide->setDuration(400);
+    slideMachine->addDefaultAnimation(slide);
+
+    // Call slideFinished when a transition finished
+    connect(slide, SIGNAL(finished()), this, SLOT(slideFinished()));
 }
 
 xdo_search_t AnimatedContainer::createSearchRequest()
@@ -181,18 +199,13 @@ QSize AnimatedContainer::getWindowSize(WId windowId) const
     return QSize(int(width), int(height));
 }
 
-void AnimatedContainer::slideInFinished()
+void AnimatedContainer::slideFinished()
 {
     // Wait some time
     QTimer::singleShot(1000, this, SLOT(pauseFinished()));
 }
 
 void AnimatedContainer::pauseFinished()
-{
-    // Do nothing yet
-}
-
-void AnimatedContainer::slideOutFinished()
 {
     // Do nothing yet
 }

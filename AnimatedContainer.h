@@ -27,22 +27,25 @@ public slots:
 
 private:
     void embedWindow(WId windowId);
+    void initSlideMachine();
     xdo_search_t createSearchRequest();
     WId searchWindow(xdo_search_t const& searchReq, int maxTries);
     QSize getWindowSize(WId windowId) const;
 
     QPointer<QWindow> existingWindow;
     QPointer<QWidget> container;
+    QPointer<QStateMachine> slideMachine;
     xdo_t * xdoInstance;
     Settings *settings;
     QSize originalSize;
-    bool reverseSlide;
 
 private slots:
-    void slideInFinished();
+    void slideFinished();
     void pauseFinished();
-    void slideOutFinished();
     void closeEvent(QCloseEvent *event) override;
+
+signals:
+    void needAnimate();
 };
 
 #endif // SELFANIMATOR_H
