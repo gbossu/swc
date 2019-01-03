@@ -37,7 +37,8 @@ private:
     QPointer<QStateMachine> slideMachine;
     xdo_t * xdoInstance;
     Settings *settings;
-    QSize originalSize;
+    QRect minimumGeometry;
+    QRect maximumGeometry;
 
 private slots:
     void slideFinished();

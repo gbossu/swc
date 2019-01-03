@@ -69,7 +69,7 @@ void AnimatedContainer::animate()
     // Resize the window to its original size
     // It is needed to avoid artifacts happening when the container is
     // created before the window is rendered
-    existingWindow->resize(originalSize);
+    existingWindow->resize(maximumGeometry.size());
 
     // Request change of state
     emit needAnimate();
@@ -78,6 +78,7 @@ void AnimatedContainer::animate()
 void AnimatedContainer::embedWindow(WId windowId)
 {
     // Get the size
+    QSize originalSize;
     const QString sizeType = settings->getString("container/size_type");
     if (sizeType == "absolute")
         originalSize = settings->getSize("container/size");
@@ -87,7 +88,6 @@ void AnimatedContainer::embedWindow(WId windowId)
         qWarning("Error: size_type setting not recognized");
         return;
     }
-    auto size = QSize(originalSize.width(), 0);
 
     // Get the position
     QPointF pos;
@@ -104,19 +104,50 @@ void AnimatedContainer::embedWindow(WId windowId)
         return;
     }
 
+    // Get the slide direction to define the anchor and the geometries
+    const QString direction = settings->getString("animation/direction");
+    if (direction == "down") {
+        QPoint anchor = QPoint(originalSize.width() / 2, 0);
+        minimumGeometry = QRect(pos.toPoint() - anchor,
+                                QSize(originalSize.width(), 0));
+        maximumGeometry = QRect(pos.toPoint() - anchor,
+                                originalSize);
+    } else if (direction == "up") {
+        QPoint anchor = QPoint(originalSize.width() / 2, 0);
+        minimumGeometry = QRect(pos.toPoint() - anchor,
+                                QSize(originalSize.width(), 0));
+        anchor.setY(originalSize.height());
+        maximumGeometry = QRect(pos.toPoint() - anchor,
+                                originalSize);
+    } else if (direction == "right") {
+        QPoint anchor = QPoint(0, originalSize.height() / 2);
+        minimumGeometry = QRect(pos.toPoint() - anchor,
+                                QSize(0, originalSize.height()));
+        maximumGeometry = QRect(pos.toPoint() - anchor,
+                                originalSize);
+    } else if (direction == "left") {
+        QPoint anchor = QPoint(0, originalSize.height() / 2);
+        minimumGeometry = QRect(pos.toPoint() - anchor,
+                                QSize(0, originalSize.height()));
+        anchor.setX(originalSize.width());
+        maximumGeometry = QRect(pos.toPoint() - anchor,
+                                originalSize);
+    } else {
+        qWarning("Error: direction setting not recognized");
+        return;
+    }
+
     // Place the animated container
-    this->setMinimumSize(size);
-    this->setMaximumSize(originalSize);
-    this->move(pos.toPoint());
+    // By default it window will be hidden
+    // It will "slide" after a call to animate
+    this->setGeometry(minimumGeometry);
+    this->setMinimumSize(minimumGeometry.size());
+    this->setMaximumSize(maximumGeometry.size());
 
     // Embed the window using the windowId
     existingWindow = QWindow::fromWinId(windowId);
     container = QWidget::createWindowContainer(existingWindow, this);
     container->resize(originalSize);
-
-    // By default when embedding, the window will be hidden
-    // It will "slide" after a call to animate
-    this->resize(size);
 
     // Initialize and start the state machine
     initSlideMachine();
@@ -128,9 +159,9 @@ void AnimatedContainer::initSlideMachine()
     // Create the slide machine with two states: hidden and visible
     slideMachine = new QStateMachine;
     auto stateHidden = new QState(slideMachine);
-    stateHidden->assignProperty(this, "size", this->minimumSize());
+    stateHidden->assignProperty(this, "geometry", minimumGeometry);
     auto stateVisible = new QState(slideMachine);
-    stateVisible->assignProperty(this, "size", originalSize);
+    stateVisible->assignProperty(this, "geometry", maximumGeometry);
     slideMachine->setInitialState(stateHidden);
 
     // Create the transitions
@@ -138,7 +169,7 @@ void AnimatedContainer::initSlideMachine()
     stateVisible->addTransition(this, SIGNAL(needAnimate()), stateHidden);
 
     // Add a transition animation
-    auto slide = new QPropertyAnimation(this, "size");
+    auto slide = new QPropertyAnimation(this, "geometry");
     slide->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
     slide->setDuration(400);
     slideMachine->addDefaultAnimation(slide);
