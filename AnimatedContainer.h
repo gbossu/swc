@@ -29,9 +29,11 @@ private:
     void embedWindow(WId windowId);
     xdo_search_t createSearchRequest();
     WId searchWindow(xdo_search_t const& searchReq, int maxTries);
+    QSize getWindowSize(WId windowId) const;
 
     QPointer<QWindow> existingWindow;
     QPointer<QWidget> container;
+    xdo_t * xdoInstance;
     Settings *settings;
     QSize originalSize;
     bool reverseSlide;

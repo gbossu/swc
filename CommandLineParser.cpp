@@ -95,7 +95,7 @@ void CommandLineParser::process(const QCoreApplication &app)
     }
 
     // If we hold the container, prepare the DBus for receiving signals
-    if (container) {
+    if (container && container->hasWindow()) {
         // Initialize the DBus
         if (!QDBusConnection::sessionBus().registerService(swcKey))
             qFatal("Could not register service on DBus");

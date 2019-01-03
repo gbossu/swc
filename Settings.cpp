@@ -8,7 +8,7 @@ Settings::Settings(const QString &fileName) :
     settingsMap["container/position_type"] = "percent";
     settingsMap["container/position"] = QPoint(50, 0);
     settingsMap["container/offset"] = QPoint(0, 0);
-    settingsMap["container/size_type"] = "absolute";
+    settingsMap["container/size_type"] = "auto";
     settingsMap["container/size"] = QSize(100, 100); // Some dummy size
 
     // Default settings for the animation

@@ -5,15 +5,17 @@
 AnimatedContainer::AnimatedContainer(Settings *settings, WId windowId, QWidget *p) :
     QWidget(p), settings(settings)
 {
+    xdoInstance = xdo_new(nullptr);
     embedWindow(windowId);
 }
 
 AnimatedContainer::AnimatedContainer(Settings *settings, const QString &className, QWidget *p) :
     QWidget(p), settings(settings)
 {
-    const char* windowPattern = className.toStdString().c_str();
+    xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
 
+    const char* windowPattern = className.toStdString().c_str();
     searchReq.winclassname = windowPattern;
     searchReq.searchmask = SEARCH_CLASSNAME;
     embedWindow(searchWindow(searchReq, settings->getInt("lookup/max_tries")));
@@ -22,6 +24,7 @@ AnimatedContainer::AnimatedContainer(Settings *settings, const QString &classNam
 AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QWidget *p) :
     QWidget(p), settings(settings)
 {
+    xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
 
     searchReq.pid = pid;
@@ -32,17 +35,19 @@ AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QWidget *p) :
 AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QString const& className, QWidget *p) :
     QWidget(p), settings(settings)
 {
-    const char* windowPattern = className.toStdString().c_str();
+    xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
 
-    searchReq.pid = pid;
+    const char* windowPattern = className.toStdString().c_str();
     searchReq.winclassname = windowPattern;
+    searchReq.pid = pid;
     searchReq.searchmask = SEARCH_PID | SEARCH_CLASSNAME;
     embedWindow(searchWindow(searchReq, settings->getInt("lookup/max_tries")));
 }
 
 AnimatedContainer::~AnimatedContainer()
 {
+    xdo_free(xdoInstance);
 }
 
 void AnimatedContainer::releaseWindow()
@@ -85,6 +90,8 @@ void AnimatedContainer::embedWindow(WId windowId)
     const QString sizeType = settings->getString("container/size_type");
     if (sizeType == "absolute")
         originalSize = settings->getSize("container/size");
+    else if (sizeType == "auto")
+        originalSize = getWindowSize(windowId);
     else {
         qWarning("Error: size_type setting not recognized");
         return;
@@ -139,29 +146,39 @@ WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq, int maxTries)
 
     // Get the sleep time from settings
     const int tryInterval = settings->getInt("lookup/try_interval");
-    if (tryInterval < 0)
+    if (tryInterval < 0) {
+        // TODO: raise exception instead of qFatal
         qFatal("Error: negative try_interval time in config file");
+    }
     const unsigned int sleepTime = static_cast<unsigned int>(tryInterval);
 
-    xdo_t * xdoInstance = xdo_new(nullptr);
+    // Try maxTries times to find the window
     while (maxTries > 0) {
         if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber)) {
-            xdo_free(xdoInstance);
+            // TODO: raise exception instead of qFatal
             qFatal("Error: Couldn't perform window search");
         }
 
-        if (windowsNumber == 1) {
-            xdo_free(xdoInstance);
+        if (windowsNumber == 1)
             return WId(windowList[0]);
-        } else if (windowsNumber > 1) {
-            xdo_free(xdoInstance);
+        else if (windowsNumber > 1) {
+            // TODO: raise exception instead of qFatal
             qFatal("Error: Found %u window(s)", windowsNumber);
         }
         --maxTries;
         QThread::msleep(sleepTime);
     }
-    xdo_free(xdoInstance);
+
+    // If we end up here, it means we found no window after maxTries tries
+    // TODO: raise exception instead of qFatal
     qFatal("Error: Found no window");
+}
+
+QSize AnimatedContainer::getWindowSize(WId windowId) const
+{
+    unsigned int width, height;
+    xdo_get_window_size(xdoInstance, windowId, &width, &height);
+    return QSize(int(width), int(height));
 }
 
 void AnimatedContainer::slideInFinished()
