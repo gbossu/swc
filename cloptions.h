@@ -41,6 +41,12 @@ namespace cloptions {
             QStringList() << "P" << "position",
             "Position of the container ('x,y')",
             "position");
+
+    /** Specify the direction of the slide animation */
+    const QCommandLineOption direction(
+            QStringList() << "D" << "direction",
+            "direction of the slide animation (d|u|r|l)",
+            "direction");
 /// @}
 }
 #endif // COMMANDLINEOPTIONS_H

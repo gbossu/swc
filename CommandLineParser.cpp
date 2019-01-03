@@ -19,6 +19,7 @@ CommandLineParser::CommandLineParser() :
     // Additional options
     parser.addOption(cloptions::size);
     parser.addOption(cloptions::position);
+    parser.addOption(cloptions::direction);
 }
 
 CommandLineParser::~CommandLineParser()
@@ -89,6 +90,23 @@ void CommandLineParser::process(const QCoreApplication &app)
                                                       values.at(1).toInt()));
         settings.setValue("container/position_type", "absolute");
     }
+
+    if (parser.isSet(cloptions::direction)) {
+        auto value = parser.value(cloptions::direction);
+        if (value == "d")
+            settings.setValue("animation/direction", "down");
+        else if (value == "u")
+            settings.setValue("animation/direction", "up");
+        else if (value == "r")
+            settings.setValue("animation/direction", "right");
+        else if (value == "l")
+            settings.setValue("animation/direction", "left");
+        else {
+            qWarning("Error: unknown slide direction");
+            return;
+        }
+    }
+
 
     /********
      * Process input options
