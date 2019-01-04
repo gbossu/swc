@@ -2,14 +2,17 @@
 #include "AnimatedContainer.h"
 #include "cloptions.h"
 #include <QtDBus>
+#include <iostream>
 
 CommandLineParser::CommandLineParser() :
     container(nullptr)
 {
-    parser.setApplicationDescription("Embed windows easily and animate them");
     parser.addPositionalArgument("swc-key",
                                  "The unique swc-key this container should use");
-    parser.addHelpOption();
+
+    // Help options
+    parser.addOption(cloptions::help);
+    parser.addOption(cloptions::version);
 
     // Input options
     parser.addOption(cloptions::className);
@@ -34,16 +37,30 @@ CommandLineParser::~CommandLineParser()
 
 void CommandLineParser::process(const QCoreApplication &app)
 {
+    parser.process(app);
+
+    /********
+     * Process help options
+     ********/
+
+    if (parser.isSet(cloptions::help)) {
+        showHelp();
+        return;
+    } else if (parser.isSet(cloptions::version)) {
+        showVersion();
+        return;
+    }
+
+
     /********
      * Process positional arguments
      ********/
 
-    parser.process(app);
-
     // Exit if no swc-key was given
     if (parser.positionalArguments().size() != 1) {
         qWarning("Error: no swc-key given.\n");
-        parser.showHelp();
+        showHelp();
+        return;
     }
 
     // Otherwise, try to "connect" to an existing swc instance
@@ -59,7 +76,6 @@ void CommandLineParser::process(const QCoreApplication &app)
             qWarning("Error: No existing container with this swc-key.");
         return;
     }
-
 
     /********
      * Process cutomization options
@@ -189,4 +205,15 @@ void CommandLineParser::process(const QCoreApplication &app)
 bool CommandLineParser::isOwningContainer() const
 {
     return container != nullptr && container->hasWindow();
+}
+
+void CommandLineParser::showHelp() const
+{
+    // It is easier not to use QStrings and the "printable" stuff
+    std::cout << cloptions::helpText;
+}
+
+void CommandLineParser::showVersion() const
+{
+    std::cout << "0.1" << std::endl;
 }

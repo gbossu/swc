@@ -37,6 +37,9 @@ public:
     bool isOwningContainer() const;
 
 private:
+    void showHelp() const;
+    void showVersion() const;
+
     AnimatedContainer *container;
     Settings settings;
     QString swcKey;
