@@ -61,6 +61,20 @@ Below are the settings that you can change (or soon can).
 - alwaysOnTop
 
 
+## Building swc
+Make sure you have the following dependencies: *qt5-base, xdotool, help2man*.
+
+Then you can start the build process:
+```
+git clone git@github.com:gbossu/swc.git
+cd swc
+mkdir build && cd build
+qmake ..
+make
+```
+
+You can also run ```sudo make install``` if you want to install swc.
+
 ## TODO
 - Better compilation process
 - Create installation rules
