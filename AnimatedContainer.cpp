@@ -151,11 +151,19 @@ void AnimatedContainer::embedWindow(WId windowId)
 
     // Initialize and start the state machine
     initSlideMachine();
-    slideMachine->start();
+    if (slideMachine)
+        slideMachine->start();
 }
 
 void AnimatedContainer::initSlideMachine()
 {
+    // Get the transition time
+    const int transitionTime = settings->getInt("animation/duration");
+    if (transitionTime < 0 || transitionTime > 10000) {
+        qWarning("Error: animation duration should be between 0 and 10000");
+        return;
+    }
+
     // Create the slide machine with two states: hidden and visible
     slideMachine = new QStateMachine;
     auto stateHidden = new QState(slideMachine);
@@ -171,7 +179,7 @@ void AnimatedContainer::initSlideMachine()
     // Add a transition animation
     auto slide = new QPropertyAnimation(this, "geometry");
     slide->setEasingCurve(QEasingCurve(QEasingCurve::OutQuad));
-    slide->setDuration(400);
+    slide->setDuration(transitionTime);
     slideMachine->addDefaultAnimation(slide);
 
     // Call slideFinished when a transition finished
@@ -194,16 +202,16 @@ WId AnimatedContainer::searchWindow(const xdo_search_t &searchReq, int maxTries)
     unsigned int windowsNumber = 0;
 
     // Get the sleep time from settings
-    const int tryInterval = settings->getInt("lookup/try_interval");
-    if (tryInterval < 0) {
+    const uint sleepTime = settings->getUInt("lookup/try_interval");
+    if (sleepTime > 1000) {
         // TODO: raise exception instead of qFatal
-        qFatal("Error: negative try_interval time in config file");
+        qFatal("Error: try_interval is bigger than 1000 in config file");
     }
-    const unsigned int sleepTime = static_cast<unsigned int>(tryInterval);
 
     // Try maxTries times to find the window
     while (maxTries > 0) {
-        if (xdo_search_windows(xdoInstance, &searchReq, &windowList, &windowsNumber)) {
+        if (xdo_search_windows(xdoInstance, &searchReq,
+                               &windowList, &windowsNumber)) {
             // TODO: raise exception instead of qFatal
             qFatal("Error: Couldn't perform window search");
         }

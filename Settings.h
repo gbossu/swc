@@ -20,6 +20,7 @@ public:
     void writeSettings() const;
 
     int getInt(QString const& key) const;
+    uint getUInt(QString const& key) const;
     QString getString(QString const& key) const;
     QPoint getPoint(QString const& key) const;
     QSize getSize(QString const& key) const;

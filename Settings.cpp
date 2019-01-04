@@ -44,6 +44,11 @@ int Settings::getInt(const QString &key) const
     return settingsMap[key].toInt();
 }
 
+uint Settings::getUInt(const QString &key) const
+{
+    return settingsMap[key].toUInt();
+}
+
 QString Settings::getString(const QString &key) const
 {
     return settingsMap[key].toString();
