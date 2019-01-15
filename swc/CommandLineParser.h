@@ -4,9 +4,9 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QProcess>
-#include "Settings.h"
 
 class AnimatedContainer;
+class Settings;
 
 class CommandLineParser
 {
@@ -41,7 +41,7 @@ private:
     void showVersion() const;
 
     AnimatedContainer *container;
-    Settings settings;
+    Settings *settings;
     QString swcKey;
     QCommandLineParser parser;
     QProcess executable;
