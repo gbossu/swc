@@ -67,8 +67,9 @@ void CommandLineParser::process(const QCoreApplication &app)
     }
 
     // Otherwise, try to "connect" to an existing swc instance
-    swcKey = "org.swc." + parser.positionalArguments().at(0);
-    QDBusInterface iface(swcKey, "/", "", QDBusConnection::sessionBus());
+    swcKey = parser.positionalArguments().at(0);
+    QString dbusKey = "org.swc." + swcKey;
+    QDBusInterface iface(dbusKey, "/", "", QDBusConnection::sessionBus());
 
     // If only an swc-key was given, and if an swc instance exists with
     // this name, then we send an "animate" request
@@ -86,7 +87,7 @@ void CommandLineParser::process(const QCoreApplication &app)
      ********/
 
     // First create the Settings object
-    settings = new Settings();
+    settings = new Settings(swcKey);
 
     if (parser.isSet(cloptions::size)) {
         auto values = parser.value(cloptions::size).split(",");
@@ -194,7 +195,7 @@ void CommandLineParser::process(const QCoreApplication &app)
     if (container->hasWindow()) {
 
         // Initialize the DBus
-        if (!QDBusConnection::sessionBus().registerService(swcKey))
+        if (!QDBusConnection::sessionBus().registerService(dbusKey))
             qFatal("Could not register service on DBus");
         QDBusConnection::sessionBus()
                 .registerObject("/", container, QDBusConnection::ExportAllSlots);

@@ -1,8 +1,30 @@
 #include "Settings.h"
-#include <QFile>
+#include <QStandardPaths>
+#include <QFileInfo>
 
-Settings::Settings(const QString &fileName) :
-    fileName(fileName)
+Settings::Settings(const QString &swcKey)
+{
+    // If there is a specific contig file for this swc id, use it
+    //TODO: use more efficient string concatenation or keep it this way
+    // for readability
+    auto filePath =
+            QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+            .append(QString("/swc/keys/")).append(swcKey).append(".conf");
+    auto fileName = QFileInfo(filePath).exists() ?
+                    QString("keys/").append(swcKey) :
+                    "swc";
+
+    // Fill the settings map with the default values
+    // And merge with the read settings
+    QSettings settings("swc", fileName);
+    generateDefaultsAndMerge(settings);
+
+    // Write the settings if the default file does not exist
+    if (!QFileInfo(settings.fileName()).exists())
+        writeSettings(settings);
+}
+
+void Settings::generateDefaultsAndMerge(const QSettings &settings)
 {
     // Default settings for the container
     settingsMap["container/position_type"] = "percent";
@@ -19,19 +41,14 @@ Settings::Settings(const QString &fileName) :
     settingsMap["lookup/max_tries"] = 25;
     settingsMap["lookup/try_interval"] = 1;
 
-    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "swc", fileName);
-    QFile settingsFile(settings.fileName());
-    if (!settingsFile.exists())
-        writeSettings();
-
+    // Overwrite using the given settings
     QStringList keys = settings.allKeys();
     for (QString const& i : keys)
         settingsMap[i] = settings.value(i);
 }
 
-void Settings::writeSettings() const
+void Settings::writeSettings(QSettings &settings) const
 {
-    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "swc", fileName);
     settings.clear();
 
     for (auto it = settingsMap.begin(); it != settingsMap.end(); ++it) {

@@ -4,20 +4,41 @@
 #include <QSettings>
 #include <QPoint>
 #include <QSize>
+#include <QFile>
 
 class Settings
 {
 public:
     /**
-     * Constructor the Settings.
+     * Constructor for Settings.
      *
-     * It will load the settings in @ref fileName, and use the default settings for missing values.
+     * It will load the settings in @ref file, and use the default settings
+     * for missing values.
      *
-     * @param fileName The name of the configuration file
+     * @param file The file used to read configuration file
      */
-    Settings(QString const& fileName = "swc");
+    Settings(const QFile &file);
 
-    void writeSettings() const;
+    /**
+     * Constructor for Settings.
+     *
+     * It will try to load the specific settings for the given swc-key, or it will
+     * load the default settings file if there are no specific settings.
+     *
+     * The default settings will be used for missing values.
+     *
+     * @param swcKey The unique identifier of the SWC container
+     */
+    Settings(QString const& swcKey);
+
+    /**
+     * Write the settings contained in the map to a QSettings file.
+     *
+     * If the files contained some settings, they will be erased.
+     *
+     * @param settings The QSettings object used to write the settings in a file
+     */
+    void writeSettings(QSettings &settings) const;
 
     int getInt(QString const& key) const;
     uint getUInt(QString const& key) const;
@@ -28,7 +49,8 @@ public:
     void setValue(QString const& key, QVariant const& value);
 
 private:
-    QString fileName;
+    void generateDefaultsAndMerge(QSettings const& settings);
+
     QMap<QString, QVariant> settingsMap;
 };
 
