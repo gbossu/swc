@@ -1,16 +1,17 @@
 #include "AnimatedContainer.h"
 #include "Settings.h"
 #include <QThread>
+#include <signal.h>
 
 AnimatedContainer::AnimatedContainer(Settings *settings, WId windowId, QWidget *p) :
-    QWidget(p), settings(settings)
+    QWidget(p), settings(settings), executable(nullptr)
 {
     xdoInstance = xdo_new(nullptr);
     embedWindow(windowId);
 }
 
 AnimatedContainer::AnimatedContainer(Settings *settings, const QString &className, QWidget *p) :
-    QWidget(p), settings(settings)
+    QWidget(p), settings(settings), executable(nullptr)
 {
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
@@ -22,7 +23,7 @@ AnimatedContainer::AnimatedContainer(Settings *settings, const QString &classNam
 }
 
 AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QWidget *p) :
-    QWidget(p), settings(settings)
+    QWidget(p), settings(settings), executable(nullptr)
 {
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
@@ -33,7 +34,7 @@ AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QWidget *p) :
 }
 
 AnimatedContainer::AnimatedContainer(Settings *settings, int pid, QString const& className, QWidget *p) :
-    QWidget(p), settings(settings)
+    QWidget(p), settings(settings), executable(nullptr)
 {
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
@@ -62,6 +63,11 @@ void AnimatedContainer::releaseWindow()
 bool AnimatedContainer::hasWindow() const
 {
     return container != nullptr;
+}
+
+void AnimatedContainer::setExecutalbe(QProcess *exec)
+{
+    executable = exec;
 }
 
 void AnimatedContainer::animate()
@@ -183,7 +189,15 @@ void AnimatedContainer::initSlideMachine()
     slideMachine->addDefaultAnimation(slide);
 
     // Call slideFinished when a transition finished
-    connect(slide, SIGNAL(finished()), this, SLOT(slideFinished()));
+    connect(slide, SIGNAL(finished()),
+            this, SLOT(slideFinished()));
+
+    // Maybe stop the process if the state becomes inactive
+    // and resume it when it becomes active again
+    connect(stateHidden, SIGNAL(entered()),
+            this, SLOT(containerHidden()));
+    connect(stateVisible, SIGNAL(entered()),
+            this, SLOT(containerShown()));
 }
 
 xdo_search_t AnimatedContainer::createSearchRequest()
@@ -247,6 +261,18 @@ void AnimatedContainer::slideFinished()
 void AnimatedContainer::pauseFinished()
 {
     // Do nothing yet
+}
+
+void AnimatedContainer::containerShown()
+{
+    if (executable)
+        kill(int(executable->pid()), SIGCONT);
+}
+
+void AnimatedContainer::containerHidden()
+{
+    if (executable)
+        kill(int(executable->pid()), SIGSTOP);
 }
 
 void AnimatedContainer::closeEvent(QCloseEvent *event)

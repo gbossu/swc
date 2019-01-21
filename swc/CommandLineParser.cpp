@@ -155,14 +155,15 @@ void CommandLineParser::process(const QCoreApplication &app)
         executable.start();
         executable.waitForStarted();
 
-        // Then create the container using the PID (and maybe the classname
-        // as well).
+        // Then create the container using the PID
+        // (and maybe the classname as well).
         container = parser.isSet(cloptions::className) ?
                     new AnimatedContainer(settings,
                                           int(executable.processId()),
                                           parser.value(cloptions::className)) :
                     new AnimatedContainer(settings,
                                           int(executable.processId()));
+        container->setExecutalbe(&executable);
     } else if (parser.isSet(cloptions::pid)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");

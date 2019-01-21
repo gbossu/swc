@@ -21,6 +21,7 @@ public:
     virtual ~AnimatedContainer() override;
     void releaseWindow();
     bool hasWindow() const;
+    void setExecutalbe(QProcess *exec);
 
 public slots:
     void animate();
@@ -37,12 +38,15 @@ private:
     QPointer<QStateMachine> slideMachine;
     xdo_t * xdoInstance;
     Settings *settings;
+    QProcess *executable;
     QRect minimumGeometry;
     QRect maximumGeometry;
 
 private slots:
     void slideFinished();
     void pauseFinished();
+    void containerShown();
+    void containerHidden();
     void closeEvent(QCloseEvent *event) override;
 
 signals:
