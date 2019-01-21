@@ -13,7 +13,7 @@ namespace cloptions {
             QStringList() << "h" << "help",
             "Display this help");
 
-    /** Create using the pid of a process */
+    /** Show swc's version */
     const QCommandLineOption version(
             QStringList() << "v" << "version",
             "Display the version");
@@ -61,6 +61,11 @@ namespace cloptions {
             QStringList() << "D" << "direction",
             "direction of the slide animation (d|u|r|l)",
             "direction");
+
+    /** Show swc's version */
+    const QCommandLineOption pause(
+            QStringList() << "I" << "pause",
+            "Pause the process when the container is hidden");
 /// @}
 
     const std::string helpText =
@@ -87,6 +92,7 @@ namespace cloptions {
         "Customization options:\n"
         "  -S, --size <size>        Size of the container. <size> can be w,h or auto\n"
         "  -P, --position <pos>     Position of the container. <pos> is x,y\n"
-        "  -D, --direction d|u|r|l  Direction of the animation\n";
+        "  -D, --direction d|u|r|l  Direction of the animation\n"
+        "  -I, --pause              Pause the process when the container is hidden\n";
 }
 #endif // COMMANDLINEOPTIONS_H

@@ -40,6 +40,7 @@ public:
      */
     void writeSettings(QSettings &settings) const;
 
+    bool getBool(QString const& key) const;
     int getInt(QString const& key) const;
     uint getUInt(QString const& key) const;
     QString getString(QString const& key) const;

@@ -41,6 +41,9 @@ void Settings::generateDefaultsAndMerge(const QSettings &settings)
     settingsMap["lookup/max_tries"] = 25;
     settingsMap["lookup/try_interval"] = 1;
 
+    // Default ownership rules for handling the process/window
+    settingsMap["ownership/pause"] = false;
+
     // Overwrite using the given settings
     QStringList keys = settings.allKeys();
     for (QString const& i : keys)
@@ -54,6 +57,11 @@ void Settings::writeSettings(QSettings &settings) const
     for (auto it = settingsMap.begin(); it != settingsMap.end(); ++it) {
         settings.setValue(it.key(), it.value());
     }
+}
+
+bool Settings::getBool(const QString &key) const
+{
+    return settingsMap[key].toBool();
 }
 
 int Settings::getInt(const QString &key) const

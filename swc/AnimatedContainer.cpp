@@ -194,10 +194,12 @@ void AnimatedContainer::initSlideMachine()
 
     // Maybe stop the process if the state becomes inactive
     // and resume it when it becomes active again
-    connect(stateHidden, SIGNAL(entered()),
-            this, SLOT(containerHidden()));
-    connect(stateVisible, SIGNAL(entered()),
-            this, SLOT(containerShown()));
+    if (settings->getBool("ownership/pause")) {
+        connect(stateHidden, SIGNAL(entered()),
+                this, SLOT(containerHidden()));
+        connect(stateVisible, SIGNAL(entered()),
+                this, SLOT(containerShown()));
+    }
 }
 
 xdo_search_t AnimatedContainer::createSearchRequest()

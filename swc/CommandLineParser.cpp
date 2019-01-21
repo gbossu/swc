@@ -24,6 +24,7 @@ CommandLineParser::CommandLineParser() :
     parser.addOption(cloptions::size);
     parser.addOption(cloptions::position);
     parser.addOption(cloptions::direction);
+    parser.addOption(cloptions::pause);
 }
 
 CommandLineParser::~CommandLineParser()
@@ -130,6 +131,9 @@ void CommandLineParser::process(const QCoreApplication &app)
             return;
         }
     }
+
+    if (parser.isSet(cloptions::pause))
+        settings->setValue("ownership/pause", true);
 
 
     /********
