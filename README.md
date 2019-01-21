@@ -76,9 +76,9 @@ make
 You can also run ```sudo make install``` if you want to install swc.
 
 ## TODO
-- Better compilation process
-- Create installation rules
 - Create commented version of default settings file
 - Implement all the options
 - Better error management
 - Add example execution
+- Use CMake instead of qmake
+- Exit gracefully on SIGKILL
