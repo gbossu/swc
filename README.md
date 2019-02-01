@@ -1,5 +1,6 @@
 # SWC (Sliding Window Container)
 SWC is a window-embedder (and probably much more in the near future). Its job is to embed windows in a Qt container, so that the window can be slided in and out of the screen in a fancy manner.
+![Example with Conky](example.gif)
 
 
 ## Using swc
@@ -82,3 +83,4 @@ You can also run ```sudo make install``` if you want to install swc.
 - Add example execution
 - Use CMake instead of qmake
 - Exit gracefully on SIGKILL
+- Generate better Doxygen documentation
