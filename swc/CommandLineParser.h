@@ -37,7 +37,7 @@ public:
     bool isOwningContainer() const;
 
 private:
-    void showHelp() const;
+    void showHelp(bool full = false) const;
     void showVersion() const;
 
     AnimatedContainer *container;

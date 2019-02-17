@@ -22,12 +22,16 @@ HEADERS += \
     AnimatedContainer.h \
     CommandLineParser.h \
     cloptions.h \
+    helptexts.h \
     Settings.h
 
 LIBS += -lxdo
 
 # Build the manpage after linking
-QMAKE_POST_LINK = help2man -N ./swc -o swc.1 && gzip swc.1
+QMAKE_POST_LINK = rm -f swc.1.gz && \
+                  help2man --help-option=\'-h full\' -N ./swc -o swc.1 && \
+                  gzip swc.1
+QMAKE_CLEAN += swc.1.gz
 
 # Add install rules
 installbin.path = /usr/bin/

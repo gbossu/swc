@@ -2,15 +2,13 @@
 #include "AnimatedContainer.h"
 #include "Settings.h"
 #include "cloptions.h"
+#include "helptexts.h"
 #include <QtDBus>
 #include <iostream>
 
 CommandLineParser::CommandLineParser() :
     container(nullptr), settings(nullptr)
 {
-    parser.addPositionalArgument("swc-key",
-                                 "The unique swc-key this container should use");
-
     // Help options
     parser.addOption(cloptions::help);
     parser.addOption(cloptions::version);
@@ -48,7 +46,8 @@ void CommandLineParser::process(const QCoreApplication &app)
      ********/
 
     if (parser.isSet(cloptions::help)) {
-        showHelp();
+        showHelp(parser.positionalArguments().size() == 1 &&
+                 parser.positionalArguments().at(0) == "full");
         return;
     } else if (parser.isSet(cloptions::version)) {
         showVersion();
@@ -220,10 +219,16 @@ bool CommandLineParser::isOwningContainer() const
     return container != nullptr && container->hasWindow();
 }
 
-void CommandLineParser::showHelp() const
+void CommandLineParser::showHelp(bool full) const
 {
     // It is easier not to use QStrings and the "printable" stuff
-    std::cout << cloptions::helpText;
+
+    if (full) {
+        std::cout << helptexts::description << std::endl
+                  << helptexts::examples << std::endl;
+    }
+    std::cout << helptexts::usage << std::endl
+              << helptexts::options;
 }
 
 void CommandLineParser::showVersion() const
