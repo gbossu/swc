@@ -81,3 +81,4 @@ You can also run ```sudo make install``` if you want to install swc.
 - Add example execution
 - Exit gracefully on SIGKILL
 - Generate better Doxygen documentation
+- Create a more elegant CMakeLists.txt
