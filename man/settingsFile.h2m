@@ -5,6 +5,7 @@ In addition to this file, you can also create a per-key configuration. I.e. if a
 Some conventions will be used for the description of the options:
  - \fIx\fR and \fIy\fR depict integers
  - \fIval\fR should be a value among a given set
+ - \flist\fR a list of space-separated items, which can be empty
 
 .SS Animation settings:
 These settings should be specified under the "[animation]" section.
@@ -29,6 +30,12 @@ Specify the size of the container. If \fBsize_type\fR is set to "auto", then thi
 .TP
 \fBsize_type\fR=\fIval\fR where val is "absolute" or "auto".
 Specify how \fIx\fR and \fIy\fR should be interpreted for the container size. If it is set to "auto", then swc will try to guess the window size. However, due to how X11 works, it will work properly when the embedded window is already rendered and displayed. To use a fixed size instead, see \fBsize\fR.
+.TP
+\fBwindow_flags\fR=\fIlist\fR where the list items can be:
+ - frameless: the container won't have a frame, unlike typical windows
+ - above: the container will always be above other windows
+ - below: the container will always be below other windows
+ - bypass: the container will bypass the window manager
 
 .SS Lookup settings:
 These settings should be specified under the "[lookup]" section.

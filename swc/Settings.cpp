@@ -32,6 +32,7 @@ void Settings::generateDefaultsAndMerge(const QSettings &settings)
     settingsMap["container/offset"] = QPoint(0, 0);
     settingsMap["container/size_type"] = "auto";
     settingsMap["container/size"] = QSize(100, 100); // Some dummy size
+    settingsMap["container/window_flags"] = "above frameless";
 
     // Default settings for the animation
     settingsMap["animation/direction"] = "down";
@@ -87,6 +88,25 @@ QPoint Settings::getPoint(const QString &key) const
 QSize Settings::getSize(const QString &key) const
 {
     return settingsMap[key].toSize();
+}
+
+Qt::WindowFlags Settings::getWindowFlags() const
+{
+    Qt::WindowFlags resultFlag = 0;
+    auto flags = settingsMap["container/window_flags"].toString().split(' ');
+
+    // TODO: maybe use a map if more flags are used
+    for (auto &flag : flags) {
+        if (flag == "frameless")
+            resultFlag |= Qt::FramelessWindowHint;
+        else if (flag == "above")
+            resultFlag |= Qt::WindowStaysOnTopHint;
+        else if (flag == "below")
+            resultFlag |= Qt::WindowStaysOnBottomHint;
+        else if (flag == "bypass")
+            resultFlag |= Qt::X11BypassWindowManagerHint;
+    }
+    return resultFlag;
 }
 
 void Settings::setValue(const QString &key, const QVariant &value)

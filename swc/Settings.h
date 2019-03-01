@@ -46,6 +46,7 @@ public:
     QString getString(QString const& key) const;
     QPoint getPoint(QString const& key) const;
     QSize getSize(QString const& key) const;
+    Qt::WindowFlags getWindowFlags() const;
 
     void setValue(QString const& key, QVariant const& value);
 

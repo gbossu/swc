@@ -150,10 +150,11 @@ void AnimatedContainer::embedWindow(WId windowId)
     this->setMinimumSize(minimumGeometry.size());
     this->setMaximumSize(maximumGeometry.size());
 
-    // Embed the window using the windowId
+    // Embed the window using the windowId and set the window flags
     existingWindow = QWindow::fromWinId(windowId);
     container = QWidget::createWindowContainer(existingWindow, this);
     container->resize(originalSize);
+    this->setWindowFlags(settings->getWindowFlags());
 
     // Initialize and start the state machine
     initSlideMachine();
