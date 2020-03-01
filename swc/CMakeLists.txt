@@ -2,6 +2,7 @@
 set(SOURCES
     main.cpp
     AnimatedContainer.cpp
+    AnimatedWindowContainer.cpp
     CommandLineParser.cpp
     Settings.cpp)
 

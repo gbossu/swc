@@ -1,5 +1,5 @@
 #include "CommandLineParser.h"
-#include "AnimatedContainer.h"
+#include "AnimatedWindowContainer.h"
 #include "Settings.h"
 #include "cloptions.h"
 #include "helptexts.h"
@@ -160,28 +160,31 @@ void CommandLineParser::process(const QCoreApplication &app)
 
         // Then create the container using the PID
         // (and maybe the classname as well).
-        container = parser.isSet(cloptions::className) ?
-                    new AnimatedContainer(settings,
-                                          int(executable.processId()),
-                                          parser.value(cloptions::className)) :
-                    new AnimatedContainer(settings,
-                                          int(executable.processId()));
-        container->setExecutalbe(&executable);
+        auto *windowContainer = parser.isSet(cloptions::className) ?
+            new AnimatedWindowContainer(*settings,
+                                        int(executable.processId()),
+                                        parser.value(cloptions::className)) :
+            new AnimatedWindowContainer(*settings,
+                                        int(executable.processId()));
+        windowContainer->setExecutalbe(&executable);
+        container = windowContainer;
     } else if (parser.isSet(cloptions::pid)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
             return;
         }
-        container = new AnimatedContainer(settings,
-                                          parser.value(cloptions::pid).toInt());
+        container =
+            new AnimatedWindowContainer(*settings,
+                                        parser.value(cloptions::pid).toInt());
     } else if (parser.isSet(cloptions::className)) {
         if (iface.isValid()) {
             qWarning("Error: Trying to reuse an swc-key for a new container.");
             return;
         }
-        container = new AnimatedContainer(settings,
-                                          parser.value(cloptions::className));
-    }  else {
+        container =
+            new AnimatedWindowContainer(*settings,
+                                        parser.value(cloptions::className));
+    } else {
         // Exit if no option was found to create a container
         if (iface.isValid())
             qWarning("Error: Options were provided for toggling a container.");
@@ -196,13 +199,17 @@ void CommandLineParser::process(const QCoreApplication &app)
      ********/
 
     // If we created a valid container, prepare the DBus for receiving signals
-    if (container->hasWindow()) {
+    if (container->hasWidget()) {
+
+        auto *windowContainer =
+            dynamic_cast<AnimatedWindowContainer*>(container);
+        Q_ASSERT(windowContainer);
 
         // Initialize the DBus
         if (!QDBusConnection::sessionBus().registerService(dbusKey))
             qFatal("Could not register service on DBus");
         QDBusConnection::sessionBus()
-                .registerObject("/", container, QDBusConnection::ExportAllSlots);
+                .registerObject("/", windowContainer, QDBusConnection::ExportAllSlots);
 
         // Finally display the container
         container->show();
@@ -216,7 +223,7 @@ void CommandLineParser::process(const QCoreApplication &app)
 
 bool CommandLineParser::isOwningContainer() const
 {
-    return container != nullptr && container->hasWindow();
+    return container != nullptr && container->hasWidget();
 }
 
 void CommandLineParser::showHelp(bool full) const
