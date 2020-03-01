@@ -139,13 +139,7 @@ void CommandLineParser::process(const QCoreApplication &app)
      * Process input options
      ********/
 
-    // Check all the supported input options for creating a container
     if (parser.isSet(cloptions::binary)) {
-        if (iface.isValid()) {
-            qWarning("Error: Trying to reuse an swc-key for a new container.");
-            return;
-        }
-
         // Extract the program and its arguments
         QStringList args = parser.value(cloptions::binary).split(" ");
         if (args.size() == 0) {
@@ -169,18 +163,10 @@ void CommandLineParser::process(const QCoreApplication &app)
         windowContainer->setExecutalbe(&executable);
         container = windowContainer;
     } else if (parser.isSet(cloptions::pid)) {
-        if (iface.isValid()) {
-            qWarning("Error: Trying to reuse an swc-key for a new container.");
-            return;
-        }
         container =
             new AnimatedWindowContainer(*settings,
                                         parser.value(cloptions::pid).toInt());
     } else if (parser.isSet(cloptions::className)) {
-        if (iface.isValid()) {
-            qWarning("Error: Trying to reuse an swc-key for a new container.");
-            return;
-        }
         container =
             new AnimatedWindowContainer(*settings,
                                         parser.value(cloptions::className));
@@ -198,6 +184,11 @@ void CommandLineParser::process(const QCoreApplication &app)
      * Register a service on the DBus
      ********/
 
+    if (iface.isValid()) {
+        qWarning("Error: Trying to reuse an swc-key for a new container.");
+        return;
+    }
+
     // If we created a valid container, prepare the DBus for receiving signals
     if (container->hasWidget()) {
 
@@ -213,11 +204,9 @@ void CommandLineParser::process(const QCoreApplication &app)
 
         // Finally display the container
         container->show();
-    }
-
-    // Otherwise, something failed when creating the container
-    else {
-        // Do nothing for now
+    } else {
+        qWarning("Error: Failure when creating the swc container.");
+        return;
     }
 }
 
