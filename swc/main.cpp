@@ -1,4 +1,5 @@
 #include "CommandLineParser.h"
+#include "AnimatedContainer.h"
 #include <QApplication>
 #include <QtDBus/QtDBus>
 
@@ -12,10 +13,8 @@ int main(int argc, char **argv)
     }
 
     CommandLineParser parser;
-    parser.process(app);
-
-    if (parser.isOwningContainer())
+    if (std::unique_ptr<AnimatedContainer> container = parser.process(app)) {
         return app.exec();
-    else
-        return 0;
+    }
+    return 0;
 }

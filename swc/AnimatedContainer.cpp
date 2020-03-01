@@ -3,9 +3,11 @@
 #include <QThread>
 #include <signal.h>
 
-AnimatedContainer::AnimatedContainer(const Settings &settings, QWidget *p) :
-    QWidget(p), settings(settings) {
-  this->setWindowFlags(settings.getWindowFlags());
+AnimatedContainer::AnimatedContainer(
+    std::unique_ptr<Settings> &&settings, QWidget *p) :
+  QWidget(p), settings(std::move(settings))
+{
+  this->setWindowFlags(this->settings->getWindowFlags());
 }
 
 AnimatedContainer::~AnimatedContainer() {}
@@ -18,7 +20,7 @@ bool AnimatedContainer::hasWidget() const
 void AnimatedContainer::initSlideMachine()
 {
     // Get the transition time
-    const int transitionTime = settings.getInt("animation/duration");
+    const int transitionTime = settings->getInt("animation/duration");
     if (transitionTime < 0 || transitionTime > 10000) {
         qWarning("Error: animation duration should be between 0 and 10000");
         return;

@@ -6,8 +6,7 @@
 #include <QtDBus>
 #include <iostream>
 
-CommandLineParser::CommandLineParser() :
-    container(nullptr), settings(nullptr)
+CommandLineParser::CommandLineParser()
 {
     // Help options
     parser.addOption(cloptions::help);
@@ -25,19 +24,8 @@ CommandLineParser::CommandLineParser() :
     parser.addOption(cloptions::pause);
 }
 
-CommandLineParser::~CommandLineParser()
-{
-    if (container)
-        delete container;
-    if (settings)
-        delete settings;
-    if (executable.state() == QProcess::Running) {
-        executable.kill();
-        executable.waitForFinished();
-    }
-}
-
-void CommandLineParser::process(const QCoreApplication &app)
+std::unique_ptr<AnimatedContainer>
+CommandLineParser::process(const QCoreApplication &app)
 {
     parser.process(app);
 
@@ -48,10 +36,10 @@ void CommandLineParser::process(const QCoreApplication &app)
     if (parser.isSet(cloptions::help)) {
         showHelp(parser.positionalArguments().size() == 1 &&
                  parser.positionalArguments().at(0) == "full");
-        return;
+        return {};
     } else if (parser.isSet(cloptions::version)) {
         showVersion();
-        return;
+        return {};
     }
 
 
@@ -63,7 +51,7 @@ void CommandLineParser::process(const QCoreApplication &app)
     if (parser.positionalArguments().size() != 1) {
         qWarning("Error: no swc-key given.\n");
         showHelp();
-        return;
+        return {};
     }
 
     // Otherwise, try to "connect" to an existing swc instance
@@ -78,7 +66,7 @@ void CommandLineParser::process(const QCoreApplication &app)
             iface.call("animate");
         else
             qWarning("Error: No existing container with this swc-key.");
-        return;
+        return {};
     }
 
 
@@ -87,7 +75,7 @@ void CommandLineParser::process(const QCoreApplication &app)
      ********/
 
     // First create the Settings object
-    settings = new Settings(swcKey);
+    auto settings = std::make_unique<Settings>(swcKey);
 
     if (parser.isSet(cloptions::size)) {
         auto values = parser.value(cloptions::size).split(",");
@@ -100,7 +88,7 @@ void CommandLineParser::process(const QCoreApplication &app)
         } else {
             qWarning("Error: invalid format for size, please use "
                      "either 'width,height' or 'auto'");
-            return;
+            return {};
         }
     }
 
@@ -108,7 +96,7 @@ void CommandLineParser::process(const QCoreApplication &app)
         auto values = parser.value(cloptions::position).split(",");
         if (values.size() != 2) {
             qWarning("Error: invalid format for position, please use 'x,y'");
-            return;
+            return {};
         }
         settings->setValue("container/position", QSize(values.at(0).toInt(),
                                                       values.at(1).toInt()));
@@ -127,7 +115,7 @@ void CommandLineParser::process(const QCoreApplication &app)
             settings->setValue("animation/direction", "left");
         else {
             qWarning("Error: unknown slide direction");
-            return;
+            return {};
         }
     }
 
@@ -138,45 +126,44 @@ void CommandLineParser::process(const QCoreApplication &app)
     /********
      * Process input options
      ********/
+    std::unique_ptr<AnimatedWindowContainer> windowContainer;
 
     if (parser.isSet(cloptions::binary)) {
         // Extract the program and its arguments
         QStringList args = parser.value(cloptions::binary).split(" ");
         if (args.size() == 0) {
             qWarning("Error: No binary file was given.");
-            return;
+            return {};
         }
-        executable.setProgram(args.front());
+
+        auto executable = std::make_unique<QProcess>();
+        executable->setProgram(args.front());
         args.pop_front();
-        executable.setArguments(args);
-        executable.start();
-        executable.waitForStarted();
+        executable->setArguments(args);
+        executable->start();
+        executable->waitForStarted();
 
         // Then create the container using the PID
         // (and maybe the classname as well).
-        auto *windowContainer = parser.isSet(cloptions::className) ?
-            new AnimatedWindowContainer(*settings,
-                                        int(executable.processId()),
-                                        parser.value(cloptions::className)) :
-            new AnimatedWindowContainer(*settings,
-                                        int(executable.processId()));
-        windowContainer->setExecutalbe(&executable);
-        container = windowContainer;
+        windowContainer = parser.isSet(cloptions::className) ?
+            std::make_unique<AnimatedWindowContainer>(
+                std::move(settings), std::move(executable),
+                parser.value(cloptions::className)) :
+            std::make_unique<AnimatedWindowContainer>(
+                std::move(settings), std::move(executable));
     } else if (parser.isSet(cloptions::pid)) {
-        container =
-            new AnimatedWindowContainer(*settings,
-                                        parser.value(cloptions::pid).toInt());
+        windowContainer = std::make_unique<AnimatedWindowContainer>(
+            std::move(settings), parser.value(cloptions::pid).toInt());
     } else if (parser.isSet(cloptions::className)) {
-        container =
-            new AnimatedWindowContainer(*settings,
-                                        parser.value(cloptions::className));
+        windowContainer = std::make_unique<AnimatedWindowContainer>(
+            std::move(settings), parser.value(cloptions::className));
     } else {
         // Exit if no option was found to create a container
         if (iface.isValid())
             qWarning("Error: Options were provided for toggling a container.");
         else
             qWarning("Error: No input option was provided to create a container.");
-        return;
+        return {};
     }
 
 
@@ -186,33 +173,25 @@ void CommandLineParser::process(const QCoreApplication &app)
 
     if (iface.isValid()) {
         qWarning("Error: Trying to reuse an swc-key for a new container.");
-        return;
+        return {};
     }
 
     // If we created a valid container, prepare the DBus for receiving signals
-    if (container->hasWidget()) {
-
-        auto *windowContainer =
-            dynamic_cast<AnimatedWindowContainer*>(container);
-        Q_ASSERT(windowContainer);
+    if (windowContainer->hasWidget()) {
 
         // Initialize the DBus
         if (!QDBusConnection::sessionBus().registerService(dbusKey))
             qFatal("Could not register service on DBus");
         QDBusConnection::sessionBus()
-                .registerObject("/", windowContainer, QDBusConnection::ExportAllSlots);
+                .registerObject("/", windowContainer.get(), QDBusConnection::ExportAllSlots);
 
         // Finally display the container
-        container->show();
+        windowContainer->show();
     } else {
         qWarning("Error: Failure when creating the swc container.");
-        return;
+        return {};
     }
-}
-
-bool CommandLineParser::isOwningContainer() const
-{
-    return container != nullptr && container->hasWidget();
+    return windowContainer;
 }
 
 void CommandLineParser::showHelp(bool full) const

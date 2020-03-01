@@ -2,6 +2,7 @@
 
 #include <QtGui>
 #include <QtWidgets>
+#include <memory>
 
 class Settings;
 
@@ -9,7 +10,7 @@ class AnimatedContainer: public QWidget
 {
     Q_OBJECT
 public:
-    AnimatedContainer(const Settings &settings, QWidget *p = nullptr);
+    AnimatedContainer(std::unique_ptr<Settings> &&settings, QWidget *p = nullptr);
     virtual ~AnimatedContainer() override;
 
     // TODO: use exceptions instead
@@ -26,7 +27,7 @@ protected:
     QPointer<QStateMachine> slideMachine;
     QState *hiddenState = nullptr;
     QState *visibleState = nullptr;
-    const Settings &settings;
+    std::unique_ptr<Settings> settings;
     QRect minimumGeometry;
     QRect maximumGeometry;
 

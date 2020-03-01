@@ -12,15 +12,17 @@ class AnimatedWindowContainer: public AnimatedContainer
 {
     Q_OBJECT
 public:
-    AnimatedWindowContainer(const Settings &settings, WId windowId,
+    AnimatedWindowContainer(std::unique_ptr<Settings> &&settings, WId windowId,
                             QWidget *p = nullptr);
-    AnimatedWindowContainer(const Settings &settings, QString const& className,                         QWidget *p = nullptr);
-    AnimatedWindowContainer(const Settings &settings, int pid,
+    AnimatedWindowContainer(std::unique_ptr<Settings> &&settings,
+                            QString const& className, QWidget *p = nullptr);
+    AnimatedWindowContainer(std::unique_ptr<Settings> &&settings,
+                            std::unique_ptr<QProcess> &&process,
                             QWidget *p = nullptr);
-    AnimatedWindowContainer(const Settings &settings, int pid,
+    AnimatedWindowContainer(std::unique_ptr<Settings> &&settings,
+                            std::unique_ptr<QProcess> &&process,
                             QString const& className, QWidget *p = nullptr);
     virtual ~AnimatedWindowContainer() override;
-    void setExecutalbe(QProcess *exec);
 
 public slots:
     void animate() override;
@@ -29,13 +31,12 @@ protected:
     void initSlideMachine();
     void embedWindow(WId windowId);
     void releaseWindow();
-    xdo_search_t createSearchRequest();
     WId searchWindow(xdo_search_t const& searchReq, int maxTries);
     QSize getWindowSize(WId windowId) const;
 
     QPointer<QWindow> existingWindow;
     xdo_t * xdoInstance;
-    QProcess *executable;
+    std::unique_ptr<QProcess> executable;
 
 private slots:
     void containerShown();

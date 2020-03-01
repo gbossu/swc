@@ -1,6 +1,6 @@
-#ifndef COMMANDLINEPARSER_H
-#define COMMANDLINEPARSER_H
+#pragma once
 
+#include <memory>
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QProcess>
@@ -20,31 +20,17 @@ public:
     CommandLineParser();
 
     /**
-     * Properly detructs the parser by detaching shared memory
-     */
-    ~CommandLineParser();
-
-    /**
      * Processes the app arguments and acts accordingly.
      *
      * @param app The Qt application
+     * @return An AnimatedContainer if the program args had valid input options
      */
-    void process(QCoreApplication const& app);
-
-    /**
-     * @return true if this swc instance is owning a valid container
-     */
-    bool isOwningContainer() const;
+    std::unique_ptr<AnimatedContainer> process(QCoreApplication const& app);
 
 private:
     void showHelp(bool full = false) const;
     void showVersion() const;
 
-    AnimatedContainer *container;
-    Settings *settings;
     QString swcKey;
     QCommandLineParser parser;
-    QProcess executable;
 };
-
-#endif // COMMANDLINEPARSER_H
