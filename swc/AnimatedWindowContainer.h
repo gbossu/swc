@@ -24,17 +24,23 @@ public:
                             QString const& className, QWidget *p = nullptr);
     virtual ~AnimatedWindowContainer() override;
 
+
+    // TODO: use exceptions instead
+    bool hasWidget() const {
+        return container != nullptr;
+    }
+
 public slots:
     void animate() override;
 
 protected:
-    void initSlideMachine();
-    void embedWindow(WId windowId);
+    void setupWindowContainer(WId windowId);
     void releaseWindow();
     WId searchWindow(xdo_search_t const& searchReq, int maxTries);
     QSize getWindowSize(WId windowId) const;
 
     QPointer<QWindow> existingWindow;
+    QPointer<QWidget> container;
     xdo_t * xdoInstance;
     std::unique_ptr<QProcess> executable;
 

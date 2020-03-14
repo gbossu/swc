@@ -13,17 +13,17 @@ public:
     AnimatedContainer(std::unique_ptr<Settings> &&settings, QWidget *p = nullptr);
     virtual ~AnimatedContainer() override;
 
-    // TODO: use exceptions instead
-    bool hasWidget() const;
-
     /// Called from DBus to request an animation for the container, and toggle
     /// its state (e.g. from hidden to visible).
-    virtual void animate() = 0;
+    virtual void animate();
 
 protected:
     void initSlideMachine();
 
-    QPointer<QWidget> container;
+    /// Configures the container so it can be animated.
+    /// @param expandedSize the size of the container when it is expanded.
+    void setupContainerWidget(const QSize &expandedSize);
+
     QPointer<QStateMachine> slideMachine;
     QState *hiddenState = nullptr;
     QState *visibleState = nullptr;
