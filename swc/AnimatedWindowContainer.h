@@ -22,12 +22,6 @@ public:
                             QString const& className);
     virtual ~AnimatedWindowContainer() override;
 
-
-    // TODO: use exceptions instead
-    bool hasWidget() const {
-        return container != nullptr;
-    }
-
 public slots:
     void animate() override;
 

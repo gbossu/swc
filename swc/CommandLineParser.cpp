@@ -126,7 +126,7 @@ CommandLineParser::process(const QCoreApplication &app)
     /********
      * Process input options
      ********/
-    std::unique_ptr<AnimatedWindowContainer> windowContainer;
+    std::unique_ptr<AnimatedContainer> container;
 
     if (parser.isSet(cloptions::binary)) {
         // Extract the program and its arguments
@@ -145,17 +145,17 @@ CommandLineParser::process(const QCoreApplication &app)
 
         // Then create the container using the PID
         // (and maybe the classname as well).
-        windowContainer = parser.isSet(cloptions::className) ?
+        container = parser.isSet(cloptions::className) ?
             std::make_unique<AnimatedWindowContainer>(
                 std::move(settings), std::move(executable),
                 parser.value(cloptions::className)) :
             std::make_unique<AnimatedWindowContainer>(
                 std::move(settings), std::move(executable));
     } else if (parser.isSet(cloptions::pid)) {
-        windowContainer = std::make_unique<AnimatedWindowContainer>(
+        container = std::make_unique<AnimatedWindowContainer>(
             std::move(settings), parser.value(cloptions::pid).toInt());
     } else if (parser.isSet(cloptions::className)) {
-        windowContainer = std::make_unique<AnimatedWindowContainer>(
+        container = std::make_unique<AnimatedWindowContainer>(
             std::move(settings), parser.value(cloptions::className));
     } else {
         // Exit if no option was found to create a container
@@ -177,21 +177,14 @@ CommandLineParser::process(const QCoreApplication &app)
     }
 
     // If we created a valid container, prepare the DBus for receiving signals
-    if (windowContainer->hasWidget()) {
+    if (!QDBusConnection::sessionBus().registerService(dbusKey))
+        qFatal("Could not register service on DBus");
+    QDBusConnection::sessionBus()
+            .registerObject("/", container.get(), QDBusConnection::ExportAllSlots);
 
-        // Initialize the DBus
-        if (!QDBusConnection::sessionBus().registerService(dbusKey))
-            qFatal("Could not register service on DBus");
-        QDBusConnection::sessionBus()
-                .registerObject("/", windowContainer.get(), QDBusConnection::ExportAllSlots);
-
-        // Finally display the container
-        windowContainer->show();
-    } else {
-        qWarning("Error: Failure when creating the swc container.");
-        return {};
-    }
-    return windowContainer;
+    // Finally display the container
+    container->show();
+    return container;
 }
 
 void CommandLineParser::showHelp(bool full) const

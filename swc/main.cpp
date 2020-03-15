@@ -1,5 +1,7 @@
 #include "CommandLineParser.h"
 #include "AnimatedContainer.h"
+#include "exceptions.h"
+
 #include <QApplication>
 #include <QtDBus/QtDBus>
 
@@ -13,7 +15,15 @@ int main(int argc, char **argv)
     }
 
     CommandLineParser parser;
-    if (std::unique_ptr<AnimatedContainer> container = parser.process(app)) {
+    std::unique_ptr<AnimatedContainer> container;
+    try {
+        container = parser.process(app);
+    } catch (const exceptions::XdoError &ex) {
+        qWarning(ex.what());
+        return 1;
+    }
+
+    if (container) {
         return app.exec();
     }
     return 0;
