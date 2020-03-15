@@ -24,6 +24,8 @@ else (h2m_PROGRAM)
   message(FATAL_ERROR "help2man is not installed")
 endif (h2m_PROGRAM)
 
+# build libraries
+add_subdirectory(utils)
 
 # build swc
 add_subdirectory(swc)
