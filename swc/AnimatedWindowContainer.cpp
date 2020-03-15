@@ -6,15 +6,16 @@
 static xdo_search_t createSearchRequest();
 
 AnimatedWindowContainer::AnimatedWindowContainer(
-        std::unique_ptr<Settings> &&settings, WId windowId, QWidget *p) :
-    AnimatedContainer(std::move(settings), p)
+        std::unique_ptr<Settings> &&settings, WId windowId) :
+    AnimatedContainer(std::move(settings))
 {
     xdoInstance = xdo_new(nullptr);
     setupWindowContainer(windowId);
 }
 
-AnimatedWindowContainer::AnimatedWindowContainer(std::unique_ptr<Settings> &&settings, const QString &className, QWidget *p) :
-    AnimatedContainer(std::move(settings), p)
+AnimatedWindowContainer::AnimatedWindowContainer(
+        std::unique_ptr<Settings> &&settings, const QString &className) :
+    AnimatedContainer(std::move(settings))
 {
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
@@ -26,8 +27,10 @@ AnimatedWindowContainer::AnimatedWindowContainer(std::unique_ptr<Settings> &&set
     setupWindowContainer(searchWindow(searchReq, maxTries));
 }
 
-AnimatedWindowContainer::AnimatedWindowContainer(std::unique_ptr<Settings> &&settings, std::unique_ptr<QProcess> &&process, QWidget *p) :
-    AnimatedContainer(std::move(settings), p), executable(std::move(process))
+AnimatedWindowContainer::AnimatedWindowContainer(
+        std::unique_ptr<Settings> &&settings,
+        std::unique_ptr<QProcess> &&process) :
+    AnimatedContainer(std::move(settings)), executable(std::move(process))
 {
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
@@ -38,8 +41,10 @@ AnimatedWindowContainer::AnimatedWindowContainer(std::unique_ptr<Settings> &&set
     setupWindowContainer(searchWindow(searchReq, maxTries));
 }
 
-AnimatedWindowContainer::AnimatedWindowContainer(std::unique_ptr<Settings> &&settings, std::unique_ptr<QProcess> &&process, QString const& className, QWidget *p) :
-    AnimatedContainer(std::move(settings), p), executable(std::move(process))
+AnimatedWindowContainer::AnimatedWindowContainer(
+        std::unique_ptr<Settings> &&settings,
+        std::unique_ptr<QProcess> &&process, QString const& className) :
+    AnimatedContainer(std::move(settings)), executable(std::move(process))
 {
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();

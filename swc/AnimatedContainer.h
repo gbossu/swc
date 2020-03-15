@@ -10,7 +10,7 @@ class AnimatedContainer: public QWidget
 {
     Q_OBJECT
 public:
-    AnimatedContainer(std::unique_ptr<Settings> &&settings, QWidget *p = nullptr);
+    AnimatedContainer(std::unique_ptr<Settings> &&settings);
     virtual ~AnimatedContainer() override;
 
     /// Called from DBus to request an animation for the container, and toggle

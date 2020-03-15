@@ -3,9 +3,8 @@
 #include <QThread>
 #include <signal.h>
 
-AnimatedContainer::AnimatedContainer(
-    std::unique_ptr<Settings> &&settings, QWidget *p) :
-  QWidget(p), settings(std::move(settings))
+AnimatedContainer::AnimatedContainer(std::unique_ptr<Settings> &&settings)
+    : settings(std::move(settings))
 {
   this->setWindowFlags(this->settings->getWindowFlags());
 }

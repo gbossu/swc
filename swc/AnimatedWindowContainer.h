@@ -12,16 +12,14 @@ class AnimatedWindowContainer: public AnimatedContainer
 {
     Q_OBJECT
 public:
-    AnimatedWindowContainer(std::unique_ptr<Settings> &&settings, WId windowId,
-                            QWidget *p = nullptr);
+    AnimatedWindowContainer(std::unique_ptr<Settings> &&settings, WId windowId);
     AnimatedWindowContainer(std::unique_ptr<Settings> &&settings,
-                            QString const& className, QWidget *p = nullptr);
+                            QString const& className);
     AnimatedWindowContainer(std::unique_ptr<Settings> &&settings,
-                            std::unique_ptr<QProcess> &&process,
-                            QWidget *p = nullptr);
+                            std::unique_ptr<QProcess> &&process);
     AnimatedWindowContainer(std::unique_ptr<Settings> &&settings,
                             std::unique_ptr<QProcess> &&process,
-                            QString const& className, QWidget *p = nullptr);
+                            QString const& className);
     virtual ~AnimatedWindowContainer() override;
 
 
