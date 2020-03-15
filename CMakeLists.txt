@@ -7,6 +7,7 @@ set(CMAKE_AUTOMOC ON)
 # find Qt5 packages
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5DBus REQUIRED)
+find_package(Qt5Charts REQUIRED)
 
 # find libxdo (from xdotool)
 find_library(xdo_LIBRARY NAMES xdo libxdo PATHS /usr/lib /usr/local/lib)
@@ -26,6 +27,7 @@ endif (h2m_PROGRAM)
 
 # build libraries
 add_subdirectory(utils)
+add_subdirectory(modules)
 
 # build swc
 add_subdirectory(swc)
