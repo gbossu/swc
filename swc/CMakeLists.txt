@@ -3,12 +3,13 @@ set(SOURCES
     main.cpp
     AnimatedContainer.cpp
     AnimatedWindowContainer.cpp
+    AnimatedModuleContainer.cpp
     CommandLineParser.cpp
     Settings.cpp)
 
 # create the executable
 add_executable(swc ${SOURCES})
-target_link_libraries(swc Qt5::Widgets Qt5::DBus xdo)
+target_link_libraries(swc Qt5::Widgets Qt5::DBus xdo modules)
 
 # grenarate the manpage
 add_custom_command(TARGET swc POST_BUILD
