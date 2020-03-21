@@ -29,6 +29,7 @@ namespace helptexts {
         "  -p, --pid <PID>          Id of the process which holds the window to embed.\n"
         "  -b, --binary <command>   Binary file that should be embedded.\n"
         "                           <command> uses the format \"<file> [args]\".\n"
+        "  -m, --module <name>      Name of the module to embed. Can be among: cpu.\n"
         "Customization options:\n"
         "  -S, --size <size>        Size of the container. <size> can be w,h or auto.\n"
         "  -P, --position <pos>     Position of the container. <pos> is x,y.\n"

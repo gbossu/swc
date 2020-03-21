@@ -41,6 +41,12 @@ namespace cloptions {
             QStringList() << "b" << "binary",
             "Binary file (and its parameters) that should be embedded",
             "binary");
+
+    /** Create using a module */
+    const QCommandLineOption modules(
+            QStringList() << "m" << "modules",
+            "Name of the module which should be embeded.",
+            "modules");
 /// @}
 
 /// @name Additional options for customizing container

@@ -1,8 +1,10 @@
 #include "CommandLineParser.h"
 #include "AnimatedWindowContainer.h"
+#include "AnimatedModuleContainer.h"
 #include "Settings.h"
 #include "cloptions.h"
 #include "helptexts.h"
+
 #include <QtDBus>
 #include <iostream>
 
@@ -16,6 +18,7 @@ CommandLineParser::CommandLineParser()
     parser.addOption(cloptions::className);
     parser.addOption(cloptions::pid);
     parser.addOption(cloptions::binary);
+    parser.addOption(cloptions::modules);
 
     // Additional options
     parser.addOption(cloptions::size);
@@ -157,6 +160,13 @@ CommandLineParser::process(const QCoreApplication &app)
     } else if (parser.isSet(cloptions::className)) {
         container = std::make_unique<AnimatedWindowContainer>(
             std::move(settings), parser.value(cloptions::className));
+    } else if (parser.isSet(cloptions::modules)) {
+        if (parser.value(cloptions::modules) != "cpu") {
+            qWarning("Error: modules should be among: cpu");
+            return {};
+        }
+        container = std::make_unique<AnimatedModuleContainer>(
+            std::move(settings));
     } else {
         // Exit if no option was found to create a container
         if (iface.isValid())
