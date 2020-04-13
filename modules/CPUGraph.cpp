@@ -46,12 +46,7 @@ CpuGraph::CpuGraph(const QSize &size, QWidget *parent)
 
 void CpuGraph::handleTimeout()
 {
-  utils::CpuUsage newUsage;
-  auto &oldAvg = lastUsage.getAverageUsage();
-  auto &newAvg = newUsage.getAverageUsage();
-  auto busyTime = newAvg.busy - oldAvg.busy;
-  auto idleTime = newAvg.idle - oldAvg.idle;
-  auto totalTime = busyTime + idleTime;
+  usageReader.update();
 
   // TODO: use totalTime to compute x index
   if (idx >= numPoints) {
@@ -62,8 +57,7 @@ void CpuGraph::handleTimeout()
   }
 
   // TODO: handle overflow of idx
-  *series << QPointF(idx++, busyTime * 100.f / totalTime);
-  lastUsage = newUsage;
+  *series << QPointF(idx++, usageReader.getAverageBusyPercent());
 }
 
 } // namespace modules

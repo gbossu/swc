@@ -1,6 +1,7 @@
 #include "CPUStatsReader.h"
 #include <fstream>
 #include <array>
+#include <thread>
 
 namespace utils {
 
@@ -24,7 +25,25 @@ static UsageTimes readUsage(std::istream &input) {
   return UsageTimes{busyTime, idleTime};
 }
 
-CpuUsage::CpuUsage(ReadMode mode) {
+CpuUsage::CpuUsage(ReadMode mode)
+{
+  if (mode == All) {
+    unsigned numCores = std::thread::hardware_concurrency();
+    if (numCores == 0)
+      numCores = 1;
+    coresUsage.resize(numCores);
+    coresDiffUsage.resize(numCores);
+  }
+
+  try {
+    update();
+  } catch (const std::out_of_range &e) {
+    throw InitializationError(
+        "Could not read the number of CPU cores properly");
+  }
+}
+
+void CpuUsage::update() {
   std::ifstream ifs("/proc/stat");
   std::string label;
   for (;;) {
@@ -32,13 +51,31 @@ CpuUsage::CpuUsage(ReadMode mode) {
     if (label.compare(0, 3, "cpu") != 0)
       break;
     if (label.size() == 3) {
+      UsageTimes lastUsage = averageUsage;
       averageUsage = readUsage(ifs);
-      if (mode == Average)
+      averageDiffUsage = averageUsage - lastUsage;
+      if (coresUsage.size() != 0)
         break;
     } else {
       auto coreIdx = std::stoul(label.substr(3));
+      UsageTimes lastUsage = coresUsage[coreIdx];
       coresUsage[coreIdx] = readUsage(ifs);
+      coresDiffUsage[coreIdx] = coresUsage[coreIdx] - lastUsage;
     }
   }
 }
+
+float CpuUsage::getAverageBusyPercent() const
+{
+  auto totalTime = averageDiffUsage.busy + averageDiffUsage.idle;
+  return averageDiffUsage.busy * 100.f / totalTime;
+}
+
+float CpuUsage::getCoreBusyPercent(unsigned coreIdx) const
+{
+  const UsageTimes &core = coresDiffUsage[coreIdx];
+  auto totalTime = core.busy + core.idle;
+  return core.busy * 100.f / totalTime;
+}
+
 }

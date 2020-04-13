@@ -25,7 +25,7 @@ private:
   QTimer timer;
   int idx = 0;
   size_t numPoints = 20;
-  utils::CpuUsage lastUsage;
+  utils::CpuUsage usageReader;
 };
 
 } // namespace modules
