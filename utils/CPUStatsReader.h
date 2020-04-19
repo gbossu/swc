@@ -13,7 +13,14 @@ struct UsageTimes {
   }
 };
 
-class CpuUsage {
+class DataReaderBase {
+public:
+  /// Returns a sensible default value for each DataReader.
+  /// e.g. for cpu usage, it would be the average usage of all cores.
+  virtual float getDefaultValue() const = 0;
+};
+
+class CpuUsage : public DataReaderBase {
 public:
   enum ReadMode {
     Average,
@@ -52,6 +59,10 @@ public:
   /// Returns a percentage of how busy the given cpu core was between the last
   /// two calls to update.
   float getCoreBusyPercent(unsigned coreIdx) const;
+
+  float getDefaultValue() const override {
+    return getAverageBusyPercent();
+  }
 
 private:
   UsageTimes averageUsage;
