@@ -1,6 +1,6 @@
 #include "AnimatedModuleContainer.h"
 #include "Settings.h"
-#include <CPUGraph.h>
+#include "ModuleGrid.h"
 
 AnimatedModuleContainer::AnimatedModuleContainer(
       std::unique_ptr<Settings> &&settings) :
@@ -16,11 +16,12 @@ AnimatedModuleContainer::AnimatedModuleContainer(
     return;
   }
 
-  // Create a Cpu usage graph and embed it
-  // TODO: support more modules
-  module = new modules::CpuGraph(originalSize, this);
+  // Create all the modules and embed them in this container.
+  grid = std::make_unique<modules::ModuleGrid>(originalSize, this);
   setupContainerWidget(originalSize);
 }
+
+AnimatedModuleContainer::~AnimatedModuleContainer() = default;
 
 void AnimatedModuleContainer::animate() {
   // FIXME: find a better way to force Qt to export AnimatedContainer::animate

@@ -6,26 +6,21 @@
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
-#include <CPUStatsReader.h>
+#include "ModuleUtils.h"
 
 namespace modules {
 
-class CpuGraph : public QObject {
-  Q_OBJECT
+class LineGraph : public ModuleBase {
 public:
-  CpuGraph(const QSize &size, QWidget *parent);
-
-public slots:
-  void handleTimeout();
+  LineGraph(const QSize &size, QWidget *parent);
+  void add(float value, unsigned index) override;
 
 private:
   QtCharts::QLineSeries *series;
   QtCharts::QValueAxis *xAxis;
   QtCharts::QChartView *chartView;
-  QTimer timer;
   int idx = 0;
   size_t numPoints = 20;
-  utils::CpuUsage usageReader;
 };
 
 } // namespace modules

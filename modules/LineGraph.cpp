@@ -1,10 +1,8 @@
-#include "CPUGraph.h"
-#include <CPUStatsReader.h>
+#include "LineGraph.h"
 
 namespace modules {
 
-CpuGraph::CpuGraph(const QSize &size, QWidget *parent)
-    : QObject(parent)
+LineGraph::LineGraph(const QSize &size, QWidget *parent)
 {
   series = new QtCharts::QLineSeries();
   // TODO: try to use OpenGL when feasible
@@ -37,16 +35,11 @@ CpuGraph::CpuGraph(const QSize &size, QWidget *parent)
   chartView->setRenderHint(QPainter::Antialiasing);
   chartView->resize(size);
   chartView->show();
-
-  connect(&timer, &QTimer::timeout, this, &CpuGraph::handleTimeout);
-  timer.setTimerType(Qt::CoarseTimer);
-  timer.setInterval(1000);
-  timer.start();
 }
 
-void CpuGraph::handleTimeout()
+void LineGraph::add(float value, unsigned index)
 {
-  usageReader.update();
+  assert(index == 0);
 
   // TODO: use totalTime to compute x index
   if (idx >= numPoints) {
@@ -57,7 +50,7 @@ void CpuGraph::handleTimeout()
   }
 
   // TODO: handle overflow of idx
-  *series << QPointF(idx++, usageReader.getAverageBusyPercent());
+  *series << QPointF(idx++, value);
 }
 
 } // namespace modules
