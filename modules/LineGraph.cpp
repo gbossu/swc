@@ -2,7 +2,8 @@
 
 namespace modules {
 
-LineGraph::LineGraph(const QSize &size, QWidget *parent)
+LineGraph::LineGraph(const QSize &size, QWidget *parent, size_t numPoints)
+    : numPoints(numPoints)
 {
   series = new QtCharts::QLineSeries();
   // TODO: try to use OpenGL when feasible

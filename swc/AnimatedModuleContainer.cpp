@@ -17,7 +17,8 @@ AnimatedModuleContainer::AnimatedModuleContainer(
   }
 
   // Create all the modules and embed them in this container.
-  grid = std::make_unique<modules::ModuleGrid>(originalSize, this);
+  grid = std::make_unique<modules::ModuleGrid>(
+      originalSize, this, moduleInfosPath);
   setupContainerWidget(originalSize);
 }
 

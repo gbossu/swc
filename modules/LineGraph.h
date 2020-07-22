@@ -12,7 +12,7 @@ namespace modules {
 
 class LineGraph : public ModuleBase {
 public:
-  LineGraph(const QSize &size, QWidget *parent);
+  LineGraph(const QSize &size, QWidget *parent, size_t numPoints);
   void add(float value, unsigned index) override;
 
 private:
@@ -20,7 +20,7 @@ private:
   QtCharts::QValueAxis *xAxis;
   QtCharts::QChartView *chartView;
   int idx = 0;
-  size_t numPoints = 20;
+  size_t numPoints;
 };
 
 } // namespace modules
