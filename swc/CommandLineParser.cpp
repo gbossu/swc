@@ -161,12 +161,10 @@ CommandLineParser::process(const QCoreApplication &app)
         container = std::make_unique<AnimatedWindowContainer>(
             std::move(settings), parser.value(cloptions::className));
     } else if (parser.isSet(cloptions::modules)) {
-        if (parser.value(cloptions::modules) != "cpu") {
-            qWarning("Error: modules should be among: cpu");
-            return {};
-        }
+        std::string moduleInfosPath =
+            parser.value(cloptions::modules).toStdString();
         container = std::make_unique<AnimatedModuleContainer>(
-            std::move(settings));
+            std::move(settings), moduleInfosPath);
     } else {
         // Exit if no option was found to create a container
         if (iface.isValid())

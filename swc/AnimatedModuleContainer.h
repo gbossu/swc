@@ -10,7 +10,8 @@ class AnimatedModuleContainer: public AnimatedContainer
 {
   Q_OBJECT
 public:
-  AnimatedModuleContainer(std::unique_ptr<Settings> &&settings);
+  AnimatedModuleContainer(std::unique_ptr<Settings> &&settings,
+                          const std::string &moduleInfosPath);
   ~AnimatedModuleContainer();
 
 public slots:

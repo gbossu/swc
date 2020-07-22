@@ -45,7 +45,7 @@ namespace cloptions {
     /** Create using a module */
     const QCommandLineOption modules(
             QStringList() << "m" << "modules",
-            "Name of the module which should be embeded.",
+            "JSON describing the modules to create.",
             "modules");
 /// @}
 

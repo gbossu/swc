@@ -3,8 +3,8 @@
 #include "ModuleGrid.h"
 
 AnimatedModuleContainer::AnimatedModuleContainer(
-      std::unique_ptr<Settings> &&settings) :
-  AnimatedContainer(std::move(settings))
+      std::unique_ptr<Settings> &&settings, const std::string &moduleInfosPath)
+  : AnimatedContainer(std::move(settings))
 {
   // Get the size
   QSize originalSize;
