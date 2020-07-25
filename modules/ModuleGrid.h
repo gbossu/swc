@@ -6,6 +6,7 @@
 #include <exception>
 #include <string>
 #include "ModuleUtils.h"
+#include "ModuleSize.h"
 
 namespace modules {
 
@@ -22,7 +23,7 @@ private:
 
 class ModuleGrid {
 public:
-  ModuleGrid(const QSize &size, QWidget *parent,
+  ModuleGrid(const ModuleSize &size, QWidget *parent,
              const std::string &settingsPath);
 
 private:

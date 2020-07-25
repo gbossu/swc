@@ -2,7 +2,7 @@
 
 namespace modules {
 
-LineGraph::LineGraph(const QSize &size, QWidget *parent, size_t numPoints)
+LineGraph::LineGraph(const ModuleSize &modSize, QWidget *parent, size_t numPoints)
     : numPoints(numPoints)
 {
   series = new QtCharts::QLineSeries();
@@ -28,13 +28,14 @@ LineGraph::LineGraph(const QSize &size, QWidget *parent, size_t numPoints)
   chart->addAxis(yAxis, Qt::AlignLeft);
   series->attachAxis(yAxis);
 
+  QSizeF size = modSize.getOrSquare();
   auto margins = QMargins(3, 3, 3, 3);
   chart->setPlotArea(QRectF(QPointF(3, 3), size.shrunkBy(margins)));
   chart->setBackgroundRoundness(3);
 
   chartView = new QtCharts::QChartView(chart, parent);
   chartView->setRenderHint(QPainter::Antialiasing);
-  chartView->resize(size);
+  chartView->resize(size.toSize());
   chartView->show();
 }
 

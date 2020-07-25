@@ -6,7 +6,7 @@
 
 namespace modules {
 
-ModuleGrid::ModuleGrid(const QSize &size, QWidget *parent,
+ModuleGrid::ModuleGrid(const ModuleSize &size, QWidget *parent,
                        const std::string &settingsPath)
 {
   // TODO: support more types of containers
@@ -16,7 +16,8 @@ ModuleGrid::ModuleGrid(const QSize &size, QWidget *parent,
   nlohmann::json settings;
   settingsFile >> settings;
 
-  using ModuleMaker = std::function<std::unique_ptr<ModuleBase>(const QSize &moduleSize)>;
+  using ModuleMaker =
+      std::function<std::unique_ptr<ModuleBase>(const ModuleSize &)>;
   std::map<std::string, ModuleMaker> moduleMakers;
 
   // Browse schemas and create lambda functions which create modules based on
@@ -26,7 +27,7 @@ ModuleGrid::ModuleGrid(const QSize &size, QWidget *parent,
       throw ModuleGridError("Unknown schema type");
     auto numPoints = schema.at("points").get<size_t>();
     moduleMakers[schema.at("name").get<std::string>()] =
-        [&](const QSize &moduleSize) {
+        [&](const ModuleSize &moduleSize) {
           return std::make_unique<LineGraph>(moduleSize, parent, numPoints);
         };
   }

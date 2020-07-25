@@ -1,6 +1,7 @@
 set(SOURCES
     LineGraph.cpp
     ModuleGrid.cpp
+    ModuleSize.cpp
     ModuleUtils.cpp)
 
 add_library(modules ${SOURCES})
