@@ -1,4 +1,5 @@
 #include "ModuleGrid.h"
+#include "ModuleInfos.h"
 #include "CPUStatsReader.h"
 #include "LineGraph.h"
 #include "json.hpp"
@@ -6,49 +7,61 @@
 
 namespace modules {
 
-ModuleGrid::ModuleGrid(const ModuleSize &size, QWidget *parent,
-                       const std::string &settingsPath)
+static std::unique_ptr<ModuleGridInfo>
+createGridInfo(const std::string &jsonGridPath)
 {
-  // TODO: support more types of containers
-  std::ifstream settingsFile(settingsPath);
+  std::ifstream settingsFile(jsonGridPath);
   if (!settingsFile.is_open())
     throw ModuleGridError("Can't open file.");
   nlohmann::json settings;
   settingsFile >> settings;
+  return std::make_unique<ModuleGridInfo>(settings);
+}
 
-  using ModuleMaker =
-      std::function<std::unique_ptr<ModuleBase>(const ModuleSize &)>;
-  std::map<std::string, ModuleMaker> moduleMakers;
-
-  // Browse schemas and create lambda functions which create modules based on
-  // their settings.
-  for (const nlohmann::json &schema : settings.at("moduleschemas")) {
-    if (schema.at("type").get<std::string>() != "line")
-      throw ModuleGridError("Unknown schema type");
-    auto numPoints = schema.at("points").get<size_t>();
-    moduleMakers[schema.at("name").get<std::string>()] =
-        [&](const ModuleSize &moduleSize) {
-          return std::make_unique<LineGraph>(moduleSize, parent, numPoints);
-        };
+/// A visitor for schemas which will create the appropriate Module based on
+/// the schema's attributes.
+class SchemaVisitor {
+using RetType = std::unique_ptr<ModuleBase>;
+public:
+  SchemaVisitor(QWidget *parent, const ModuleSize &modSize)
+      : parent(parent), modSize(modSize) {}
+  RetType operator()(const schemas::Line &schema) {
+    return std::make_unique<LineGraph>(modSize, parent, schema.points);
   }
+private:
+  QWidget *parent;
+  const ModuleSize &modSize;
+};
 
-  for (const nlohmann::json &moduleInfo : settings.at("modules")) {
-    if (moduleInfo.at("src").get<std::string>() != "cpu")
+ModuleGrid::ModuleGrid(const ModuleSize &size, QWidget *parent,
+                       const std::string &settingsPath)
+{
+  // TODO: support more types of containers
+  // TODO: support several modules
+
+  gridInfo = createGridInfo(settingsPath);
+
+  for (const ModuleInfo &moduleInfo : *gridInfo) {
+    if (moduleInfo.getSourceName() != "cpu")
       throw ModuleGridError("Unknown module source");
-    auto schemaName = moduleInfo.at("schema").get<std::string>();
-    auto makerIt = moduleMakers.find(schemaName);
-    if (makerIt == moduleMakers.end())
-      throw ModuleGridError("Unknown schema " + schemaName);
-    auto refreshRate = moduleInfo.at("refresh").get<miliseconds>();
+    const ModuleSchema &schema =
+        gridInfo->getSchema(moduleInfo.getSchemaName());
+    miliseconds refreshRate = moduleInfo.getRefreshDelay();
 
+    SchemaVisitor vis(parent, size);
+    std::unique_ptr<ModuleBase> module = std::visit(vis, schema.getVariant());
     auto dataForwarder =
         std::make_unique<DataForwarder<utils::CpuUsage>>(refreshRate);
-    std::unique_ptr<ModuleBase> module = makerIt->second(size);
     dataForwarder->addModuleWithDefaultAction(*module);
 
     forwarders.push_back(std::move(dataForwarder));
     modules.push_back(std::move(module));
   }
+}
+
+ModuleGrid::~ModuleGrid()
+{
+  // Needed due to the forward-declaration of ModuleGridInfo
 }
 
 }

@@ -1,6 +1,7 @@
 set(SOURCES
     LineGraph.cpp
     ModuleGrid.cpp
+    ModuleInfos.cpp
     ModuleSize.cpp
     ModuleUtils.cpp)
 
