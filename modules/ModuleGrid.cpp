@@ -43,6 +43,11 @@ ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
   gridWidget->resize(gridSize.getOrSquare().toSize());
   auto *grid = new QGridLayout(gridWidget);
 
+  const std::vector<int> &stretchFactors =
+      gridInfo->getColumnStretchFactors();
+  for (size_t idx = 0; idx < stretchFactors.size(); ++idx)
+    grid->setColumnStretch(idx, stretchFactors[idx]);
+
   for (const ModuleInfo &moduleInfo : *gridInfo) {
     if (moduleInfo.getSourceName() != "cpu")
       throw ModuleGridError("Unknown module source");

@@ -82,22 +82,28 @@ public:
 
   ModuleGridInfo(const nlohmann::json &jsonGrid);
 
-  /// Returns the biggest line number among all Modules.
-  unsigned getMaxLine() const {
-    return maxLine;
+  /// Returns the biggest row number among all Modules.
+  unsigned getMaxRow() const {
+    return maxRow;
   }
 
   /// @return the schema corresponding to the given name.
   /// throws @ref ModuleGridError if it cannot be found.
   const ModuleSchema &getSchema(const std::string &schemaName) const;
 
+  /// @return Get the specified stretch factors of columns.
+  const std::vector<int> &getColumnStretchFactors() const {
+    return columnWidths;
+  }
+
   ConstModuleIt begin() const;
   ConstModuleIt end() const;
 
 private:
-  unsigned maxLine = std::numeric_limits<unsigned>::max();
+  unsigned maxRow = std::numeric_limits<unsigned>::min();
   std::map<std::string, ModuleSchema> moduleSchemas;
   std::vector<ModuleInfo> modules;
+  std::vector<int> columnWidths;
 };
 
 }
