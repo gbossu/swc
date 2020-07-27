@@ -4,6 +4,7 @@
 #include "LineGraph.h"
 #include "json.hpp"
 #include <fstream>
+#include <QGridLayout>
 
 namespace modules {
 
@@ -23,33 +24,39 @@ createGridInfo(const std::string &jsonGridPath)
 class SchemaVisitor {
 using RetType = std::unique_ptr<ModuleBase>;
 public:
-  SchemaVisitor(QWidget *parent, const ModuleSize &modSize)
-      : parent(parent), modSize(modSize) {}
+  SchemaVisitor(const ModuleSize &modSize) : modSize(modSize) {}
   RetType operator()(const schemas::Line &schema) {
-    return std::make_unique<LineGraph>(modSize, parent, schema.points);
+    return std::make_unique<LineGraph>(modSize, schema.points);
   }
 private:
-  QWidget *parent;
   const ModuleSize &modSize;
 };
 
-ModuleGrid::ModuleGrid(const ModuleSize &size, QWidget *parent,
+ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
                        const std::string &settingsPath)
 {
   // TODO: support more types of containers
-  // TODO: support several modules
+  // TODO: support auto sizing
 
   gridInfo = createGridInfo(settingsPath);
+  auto *gridWidget = new QWidget(parent);
+  gridWidget->resize(gridSize.getOrSquare().toSize());
+  auto *grid = new QGridLayout(gridWidget);
 
   for (const ModuleInfo &moduleInfo : *gridInfo) {
     if (moduleInfo.getSourceName() != "cpu")
       throw ModuleGridError("Unknown module source");
     const ModuleSchema &schema =
         gridInfo->getSchema(moduleInfo.getSchemaName());
-    miliseconds refreshRate = moduleInfo.getRefreshDelay();
 
-    SchemaVisitor vis(parent, size);
+    // TODO: Modules might want to specify their preferred size.
+    ModuleSize modSize;
+    SchemaVisitor vis(modSize);
     std::unique_ptr<ModuleBase> module = std::visit(vis, schema.getVariant());
+    grid->addWidget(module->getWidget(), moduleInfo.getRow(),
+                    moduleInfo.getColumn());
+
+    miliseconds refreshRate = moduleInfo.getRefreshDelay();
     auto dataForwarder =
         std::make_unique<DataForwarder<utils::CpuUsage>>(refreshRate);
     dataForwarder->addModuleWithDefaultAction(*module);

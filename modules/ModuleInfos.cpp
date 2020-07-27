@@ -20,6 +20,8 @@ ModuleInfo::ModuleInfo(const nlohmann::json &jsonModule)
   jsonModule.at("src").get_to(sourceName);
   jsonModule.at("schema").get_to(schemaName);
   jsonModule.at("refresh").get_to(refreshDelay);
+  jsonModule.at("row").get_to(row);
+  jsonModule.at("column").get_to(column);
 }
 
 ModuleGridInfo::ModuleGridInfo(const nlohmann::json &jsonGrid)

@@ -61,10 +61,18 @@ public:
   miliseconds getRefreshDelay() const {
     return refreshDelay;
   }
+  unsigned getRow() const {
+    return row;
+  }
+  unsigned getColumn() const {
+    return column;
+  }
 private:
   std::string sourceName;
   std::string schemaName;
   miliseconds refreshDelay;
+  unsigned row;
+  unsigned column;
 };
 
 /// Represents the information gathered from a JSON about a ModuleGrid.

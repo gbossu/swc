@@ -4,6 +4,8 @@
 #include <functional>
 #include <vector>
 
+class QWidget;
+
 namespace modules {
 
 using miliseconds = unsigned;
@@ -15,6 +17,9 @@ public:
 
   /// Used by DataForwarders to communicate values from DataReaders to Modules.
   virtual void add(float value, unsigned index = 0U) = 0;
+
+  /// Returns the Qt widget representing the module.
+  virtual QWidget *getWidget() const = 0;
 };
 
 /// Base class for all DataForwarders.

@@ -1,15 +1,41 @@
 #include "LineGraph.h"
+#include <QGraphicsLayout>
 
 namespace modules {
 
-LineGraph::LineGraph(const ModuleSize &modSize, QWidget *parent, size_t numPoints)
+/// A standard QChart with the exception that the plot area always occupies
+/// the whole available space.
+class FullSizeChart : public QtCharts::QChart {
+protected:
+  void resizeEvent(QGraphicsSceneResizeEvent *event) override {
+    QtCharts::QChart::resizeEvent(event);
+    setPlotArea(geometry());
+    // Force the "grid" to be re-drawn
+    for (QtCharts::QAbstractAxis *ax : axes()) {
+      ax->hide();
+      ax->show();
+    }
+  }
+};
+
+LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
     : numPoints(numPoints)
 {
   series = new QtCharts::QLineSeries();
   // TODO: try to use OpenGL when feasible
   // series->setUseOpenGL(true);
 
-  auto chart = new QtCharts::QChart();
+  auto chart = new FullSizeChart();
+  chartView = new QtCharts::QChartView(chart);
+  chartView->setRenderHint(QPainter::Antialiasing);
+
+  // Note: it seems that setting null margins does not really help,
+  // only setting the PlotArea to occupy the whole chart works.
+  chart->setMargins(QMargins(0, 0, 0, 0));
+  chart->setContentsMargins(QMargins(0, 0, 0, 0));
+  chart->layout()->setContentsMargins(0, 0, 0, 0);
+  chartView->setContentsMargins(QMargins(0, 0, 0, 0));
+
   chart->legend()->hide();
   chart->addSeries(series);
 
@@ -27,16 +53,11 @@ LineGraph::LineGraph(const ModuleSize &modSize, QWidget *parent, size_t numPoint
   yAxis->setRange(0, 100);
   chart->addAxis(yAxis, Qt::AlignLeft);
   series->attachAxis(yAxis);
+}
 
-  QSizeF size = modSize.getOrSquare();
-  auto margins = QMargins(3, 3, 3, 3);
-  chart->setPlotArea(QRectF(QPointF(3, 3), size.shrunkBy(margins)));
-  chart->setBackgroundRoundness(3);
-
-  chartView = new QtCharts::QChartView(chart, parent);
-  chartView->setRenderHint(QPainter::Antialiasing);
-  chartView->resize(size.toSize());
-  chartView->show();
+LineGraph::~LineGraph()
+{
+  delete chartView;
 }
 
 void LineGraph::add(float value, unsigned index)
@@ -53,6 +74,11 @@ void LineGraph::add(float value, unsigned index)
 
   // TODO: handle overflow of idx
   *series << QPointF(idx++, value);
+}
+
+QWidget *LineGraph::getWidget() const
+{
+  return chartView;
 }
 
 } // namespace modules
