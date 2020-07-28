@@ -1,5 +1,6 @@
-#include "LineGraph.h"
+#include "Graph.h"
 #include <QGraphicsLayout>
+#include <QtCharts/QBarSeries>
 
 namespace modules {
 
@@ -18,14 +19,9 @@ protected:
   }
 };
 
-LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
-    : numPoints(numPoints)
+GraphBase::GraphBase(const ModuleSize &modSize)
 {
-  series = new QtCharts::QLineSeries();
-  // TODO: try to use OpenGL when feasible
-  // series->setUseOpenGL(true);
-
-  auto chart = new FullSizeChart();
+  chart = new FullSizeChart();
   chartView = new QtCharts::QChartView(chart);
   chartView->setRenderHint(QPainter::Antialiasing);
 
@@ -37,11 +33,29 @@ LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
   chartView->setContentsMargins(QMargins(0, 0, 0, 0));
 
   chart->legend()->hide();
-  chart->addSeries(series);
 
   // TODO: try to use animations without high CPU usage.
   // chart->setAnimationDuration(500);
   // chart->setAnimationOptions(QtCharts::QChart::SeriesAnimations);
+}
+
+GraphBase::~GraphBase()
+{
+  delete chartView;
+}
+
+QWidget *GraphBase::getWidget() const
+{
+  return chartView;
+}
+
+LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
+    : GraphBase(modSize), numPoints(numPoints)
+{
+  series = new QtCharts::QLineSeries();
+  chart->addSeries(series);
+  // TODO: try to use OpenGL when feasible
+  // series->setUseOpenGL(true);
 
   xAxis = new QtCharts::QValueAxis();
   xAxis->setLabelsVisible(false);
@@ -53,11 +67,6 @@ LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
   yAxis->setRange(0, 100);
   chart->addAxis(yAxis, Qt::AlignLeft);
   series->attachAxis(yAxis);
-}
-
-LineGraph::~LineGraph()
-{
-  delete chartView;
 }
 
 void LineGraph::add(float value, unsigned index)
@@ -76,9 +85,28 @@ void LineGraph::add(float value, unsigned index)
   *series << QPointF(idx++, value);
 }
 
-QWidget *LineGraph::getWidget() const
+BarGraph::BarGraph(const ModuleSize &size)
+    : GraphBase(size)
 {
-  return chartView;
+  auto series = new QtCharts::QBarSeries();
+  series->setBarWidth(1);
+
+  bar = new QtCharts::QBarSet("");
+  bar->insert(0, 0);
+  series->append(bar);
+  chart->addSeries(series);
+
+  auto yAxis = new QtCharts::QValueAxis();
+  yAxis->setLabelsVisible(false);
+  yAxis->setRange(0, 100);
+  chart->addAxis(yAxis, Qt::AlignLeft);
+  series->attachAxis(yAxis);
+}
+
+void BarGraph::add(float value, unsigned index)
+{
+  assert(index == 0); // Do not handle multiple bars so far.
+  bar->replace(0, value);
 }
 
 } // namespace modules

@@ -10,8 +10,9 @@ ModuleSchema::ModuleSchema(const nlohmann::json &jsonSchema)
     auto numPoints = jsonSchema.at("points").get<unsigned>();
     auto lineWidth = jsonSchema.at("lineWidth").get<unsigned>();
     variant = schemas::Line{numPoints, lineWidth};
-  }
-  else
+  } else if (typeName == "bar") {
+    variant = schemas::Bar{};
+  } else
     throw ModuleGridError("Unknown schema type " + typeName);
 }
 

@@ -28,8 +28,11 @@ namespace schemas {
     unsigned points;
     unsigned lineWidth;
   };
+
+  struct Bar {
+  };
 }
-using SchemaVariant = std::variant<schemas::Line>;
+using SchemaVariant = std::variant<schemas::Line, schemas::Bar>;
 
 /// Represents the information gathered from a JSON about a ModuleSchema.
 class ModuleSchema {

@@ -2,7 +2,7 @@
 #include "ModuleInfos.h"
 #include "CPUStatsReader.h"
 #include "MemStatsReader.h"
-#include "LineGraph.h"
+#include "Graph.h"
 #include "json.hpp"
 #include <fstream>
 #include <QGridLayout>
@@ -28,6 +28,9 @@ public:
   SchemaVisitor(const ModuleSize &modSize) : modSize(modSize) {}
   RetType operator()(const schemas::Line &schema) {
     return std::make_unique<LineGraph>(modSize, schema.points);
+  }
+  RetType operator()(const schemas::Bar &) {
+    return std::make_unique<BarGraph>(modSize);
   }
 private:
   const ModuleSize &modSize;
