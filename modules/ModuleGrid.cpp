@@ -1,6 +1,7 @@
 #include "ModuleGrid.h"
 #include "ModuleInfos.h"
 #include "CPUStatsReader.h"
+#include "MemStatsReader.h"
 #include "LineGraph.h"
 #include "json.hpp"
 #include <fstream>
@@ -49,8 +50,6 @@ ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
     grid->setColumnStretch(idx, stretchFactors[idx]);
 
   for (const ModuleInfo &moduleInfo : *gridInfo) {
-    if (moduleInfo.getSourceName() != "cpu")
-      throw ModuleGridError("Unknown module source");
     const ModuleSchema &schema =
         gridInfo->getSchema(moduleInfo.getSchemaName());
 
@@ -62,11 +61,18 @@ ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
                     moduleInfo.getColumn());
 
     miliseconds refreshRate = moduleInfo.getRefreshDelay();
-    auto dataForwarder =
-        std::make_unique<DataForwarder<utils::CpuUsage>>(refreshRate);
-    dataForwarder->addModuleWithDefaultAction(*module);
-
-    forwarders.push_back(std::move(dataForwarder));
+    if (moduleInfo.getSourceName() == "cpu") {
+      auto dataForwarder =
+          std::make_unique<DataForwarder<utils::CpuUsage>>(refreshRate);
+      dataForwarder->addModuleWithDefaultAction(*module);
+      forwarders.push_back(std::move(dataForwarder));
+    } else if (moduleInfo.getSourceName() == "mem") {
+      auto dataForwarder =
+          std::make_unique<DataForwarder<utils::MemStatsReader>>(refreshRate);
+      dataForwarder->addModuleWithDefaultAction(*module);
+      forwarders.push_back(std::move(dataForwarder));
+    } else
+      throw ModuleGridError("Unknown module source");
     modules.push_back(std::move(module));
   }
 }
