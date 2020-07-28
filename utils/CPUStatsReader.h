@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataReaderBase.h"
 #include <vector>
 #include <string>
 
@@ -11,13 +12,6 @@ struct UsageTimes {
   UsageTimes operator-(const UsageTimes &rhs) const {
     return UsageTimes{busy - rhs.busy, idle - rhs.idle};
   }
-};
-
-class DataReaderBase {
-public:
-  /// Returns a sensible default value for each DataReader.
-  /// e.g. for cpu usage, it would be the average usage of all cores.
-  virtual float getDefaultValue() const = 0;
 };
 
 class CpuUsage : public DataReaderBase {
@@ -40,7 +34,7 @@ public:
 
   CpuUsage(ReadMode mode = All);
 
-  void update();
+  void update() override;
 
   /// Returns the average usage details of all cores since startup.
   const UsageTimes &getTotalAverageUsage() const {
