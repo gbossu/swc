@@ -5,7 +5,8 @@ In addition to this file, you can also create a per-key configuration. I.e. if a
 Some conventions will be used for the description of the options:
  - \fIx\fR and \fIy\fR depict integers
  - \fIval\fR should be a value among a given set
- - \flist\fR a list of space-separated items, which can be empty
+ - \fIlist\fR a list of space-separated items, which can be empty
+ - \fIbool\fR is "true" or "false"
 
 .SS Animation settings:
 These settings should be specified under the "[animation]" section.
@@ -36,6 +37,9 @@ Specify how \fIx\fR and \fIy\fR should be interpreted for the container size. If
  - above: the container will always be above other windows
  - below: the container will always be below other windows
  - bypass: the container will bypass the window manager
+.TP
+\fBhide_on_focus_loss\fR=\fIbool\fR
+Specify if the container should be hidden when it loses focus.
 
 .SS Lookup settings:
 These settings should be specified under the "[lookup]" section.
@@ -49,5 +53,5 @@ Specify the delay in ms between each try.
 .SS Ownership settings:
 These settings should be specified under the "[ownership]" section.
 .TP
-\fBpause\fR=\fIval\fR where val is "true" or "false"
+\fBpause\fR=\fIbool\fR
 Specify whether or not the process owning the embedded window should be paused when the container is hidden. Note that this only works if the container was created using the \fBbinary\fR input option.

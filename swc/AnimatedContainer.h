@@ -18,6 +18,9 @@ public:
     virtual void animate();
 
 protected:
+
+    void changeEvent(QEvent *event) override;
+
     void initSlideMachine();
 
     /// Configures the container so it can be animated.
@@ -33,4 +36,5 @@ protected:
 
 signals:
     void needAnimate();
+    void gotUnfocused();
 };

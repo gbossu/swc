@@ -33,6 +33,7 @@ void Settings::generateDefaultsAndMerge(const QSettings &settings)
     settingsMap["container/size_type"] = "auto";
     settingsMap["container/size"] = QSize(100, 100); // Some dummy size
     settingsMap["container/window_flags"] = "above frameless";
+    settingsMap["container/hide_on_focus_loss"] = true;
 
     // Default settings for the animation
     settingsMap["animation/direction"] = "down";
@@ -92,7 +93,7 @@ QSize Settings::getSize(const QString &key) const
 
 Qt::WindowFlags Settings::getWindowFlags() const
 {
-    Qt::WindowFlags resultFlag = 0;
+    Qt::WindowFlags resultFlag;
     auto flags = settingsMap["container/window_flags"].toString().split(' ');
 
     // TODO: maybe use a map if more flags are used

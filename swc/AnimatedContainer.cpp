@@ -17,6 +17,12 @@ void AnimatedContainer::animate()
   emit needAnimate();
 }
 
+void AnimatedContainer::changeEvent(QEvent *event)
+{
+  if (event->type() == QEvent::ActivationChange && !isActiveWindow())
+    emit gotUnfocused();
+}
+
 void AnimatedContainer::initSlideMachine()
 {
   // Get the transition time
@@ -32,11 +38,17 @@ void AnimatedContainer::initSlideMachine()
   hiddenState->assignProperty(this, "geometry", minimumGeometry);
   visibleState = new QState(slideMachine);
   visibleState->assignProperty(this, "geometry", maximumGeometry);
+  auto unfocusedState = new QState(slideMachine);
+  unfocusedState->assignProperty(this, "geometry", minimumGeometry);
   slideMachine->setInitialState(hiddenState);
 
   // Create the transitions
   hiddenState->addTransition(this, SIGNAL(needAnimate()), visibleState);
   visibleState->addTransition(this, SIGNAL(needAnimate()), hiddenState);
+  if (settings->getBool("container/hide_on_focus_loss")) {
+    visibleState->addTransition(this, SIGNAL(gotUnfocused()), unfocusedState);
+    unfocusedState->addTransition(this, SIGNAL(needAnimate()), visibleState);
+  }
 
   // Add a transition animation
   auto slide = new QPropertyAnimation(this, "geometry");
