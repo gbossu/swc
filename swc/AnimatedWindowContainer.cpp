@@ -20,8 +20,8 @@ AnimatedWindowContainer::AnimatedWindowContainer(
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
 
-    const char* windowPattern = className.toStdString().c_str();
-    searchReq.winclassname = windowPattern;
+    std::string windowPattern = className.toStdString();
+    searchReq.winclassname = windowPattern.c_str();
     searchReq.searchmask = SEARCH_CLASSNAME;
     int maxTries = this->settings->getInt("lookup/max_tries");
     setupWindowContainer(searchWindow(searchReq, maxTries));
@@ -49,8 +49,8 @@ AnimatedWindowContainer::AnimatedWindowContainer(
     xdoInstance = xdo_new(nullptr);
     xdo_search_t searchReq = createSearchRequest();
 
-    const char* windowPattern = className.toStdString().c_str();
-    searchReq.winclassname = windowPattern;
+    std::string windowPattern = className.toStdString();
+    searchReq.winclassname = windowPattern.c_str();
     searchReq.pid = executable->processId();
     searchReq.searchmask = SEARCH_PID | SEARCH_CLASSNAME;
     int maxTries = this->settings->getInt("lookup/max_tries");
