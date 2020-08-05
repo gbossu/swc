@@ -7,24 +7,22 @@
 
 int main(int argc, char **argv)
 {
-    QApplication app(argc, argv);
-    QApplication::setApplicationName("SWC");
-
     if (!QDBusConnection::sessionBus().isConnected()) {
         qFatal("Cannot connect to the D-Bus session bus.");
     }
 
     CommandLineParser parser;
-    std::unique_ptr<AnimatedContainer> container;
+    CommandLineParser::Result res;
     try {
-        container = parser.process(app);
+        res = parser.process(argc, argv);
     } catch (const exceptions::XdoError &ex) {
         qWarning(ex.what());
         return 1;
     }
 
-    if (container) {
-        return app.exec();
+    if (res.container) {
+        assert(res.app.get());
+        return res.app->exec();
     }
     return 0;
 }

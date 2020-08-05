@@ -27,10 +27,52 @@ CommandLineParser::CommandLineParser()
     parser.addOption(cloptions::pause);
 }
 
-std::unique_ptr<AnimatedContainer>
-CommandLineParser::process(const QCoreApplication &app)
+static QString getDBusKey(const QString &swcKey)
 {
-    parser.process(app);
+    return "org.swc." + swcKey;
+}
+
+static QDBusInterface getDBusInterface(const QString &swcKey){
+    QString dbusKey = getDBusKey(swcKey);
+    return QDBusInterface(dbusKey, "/", "", QDBusConnection::sessionBus());
+}
+
+CommandLineParser::Result
+CommandLineParser::process(int &argc, char **argv)
+{
+    // First, try to parse the args without creating a QApplication.
+    // This turns out to be quite important in the following scenario:
+    //  - an swc container (with key "my-key") is the active window
+    //  - there is a keyboard shortcut to run "swc my-key"
+    //  - the hide_on_focus_loss option is enabled
+    // Then if a QApplication is created when the user presses the shortcut,
+    // it might first render the container window inactive, and it will
+    // start sliding back because it lost focus. But then the signal to
+    // toggle the container is sent, and it will start sliding in again.
+    // In the end, nothing happened. One (temporary?) solution is to avoid
+    // creating a QApplication when we know a GUI is not needed.
+    QStringList args;
+    for (int idx = 0; idx < argc; ++idx) {
+        args.append(argv[idx]);
+    }
+    if (parser.parse(args) && parser.positionalArguments().size() == 1 &&
+        parser.optionNames().size() == 0) {
+        // If only an swc-key was passed, try to toggle its corresponding
+        // container.
+        QString swcKey = parser.positionalArguments().at(0);
+        QDBusInterface iface = getDBusInterface(swcKey);
+        if (iface.isValid())
+            iface.call("animate");
+        else
+            qWarning("Error: No existing container with this swc-key.");
+        return {};
+    }
+
+    // For other cases, create a QApplication
+    auto app = std::make_unique<QApplication>(argc, argv);
+    app->setApplicationName("swc");
+    parser.process(*app);
+
 
     /********
      * Process help options
@@ -57,18 +99,11 @@ CommandLineParser::process(const QCoreApplication &app)
         return {};
     }
 
-    // Otherwise, try to "connect" to an existing swc instance
-    swcKey = parser.positionalArguments().at(0);
-    QString dbusKey = "org.swc." + swcKey;
-    QDBusInterface iface(dbusKey, "/", "", QDBusConnection::sessionBus());
-
-    // If only an swc-key was given, and if an swc instance exists with
-    // this name, then we send an "animate" request
+    // If only an swc-key was given and we get to this point, it means that
+    // parser.parse() failed.
     if (parser.optionNames().empty()) {
-        if (iface.isValid())
-            iface.call("animate");
-        else
-            qWarning("Error: No existing container with this swc-key.");
+        qWarning("Error: Qt-specific options were passed to toggle a "
+                 "swc container.");
         return {};
     }
 
@@ -78,6 +113,7 @@ CommandLineParser::process(const QCoreApplication &app)
      ********/
 
     // First create the Settings object
+    QString swcKey = parser.positionalArguments().at(0);
     auto settings = std::make_unique<Settings>(swcKey);
 
     if (parser.isSet(cloptions::size)) {
@@ -167,7 +203,7 @@ CommandLineParser::process(const QCoreApplication &app)
             std::move(settings), moduleInfosPath);
     } else {
         // Exit if no option was found to create a container
-        if (iface.isValid())
+        if (getDBusInterface(swcKey).isValid())
             qWarning("Error: Options were provided for toggling a container.");
         else
             qWarning("Error: No input option was provided to create a container.");
@@ -179,20 +215,20 @@ CommandLineParser::process(const QCoreApplication &app)
      * Register a service on the DBus
      ********/
 
-    if (iface.isValid()) {
+    if (getDBusInterface(swcKey).isValid()) {
         qWarning("Error: Trying to reuse an swc-key for a new container.");
         return {};
     }
 
     // If we created a valid container, prepare the DBus for receiving signals
-    if (!QDBusConnection::sessionBus().registerService(dbusKey))
+    if (!QDBusConnection::sessionBus().registerService(getDBusKey(swcKey)))
         qFatal("Could not register service on DBus");
     QDBusConnection::sessionBus()
             .registerObject("/", container.get(), QDBusConnection::ExportAllSlots);
 
     // Finally display the container
     container->show();
-    return container;
+    return {std::move(container), std::move(app)};
 }
 
 void CommandLineParser::showHelp(bool full) const
