@@ -51,12 +51,27 @@ private:
   SchemaVariant variant;
 };
 
+namespace dataSources
+{
+struct Cpu {
+  std::vector<unsigned> cores;
+};
+struct Mem {
+  bool physicalMem = true;
+  bool virtualMem = false;
+  bool swap = false;
+};
+} // namespace dataSources
+using DataSourceVariant = std::variant<dataSources::Cpu, dataSources::Mem>;
+
 /// Represents the information gathered from a JSON about a Module.
+/// The goal is to parse the JSON and make sure it is valid, so the ModuleGrid
+/// has no more error-checking to do.
 class ModuleInfo {
 public:
   ModuleInfo(const nlohmann::json &jsonModule);
-  const std::string &getSourceName() const {
-    return sourceName;
+  const DataSourceVariant &getDataSource() const {
+    return dataSource;
   }
   const std::string &getSchemaName() const {
     return schemaName;
@@ -71,7 +86,7 @@ public:
     return column;
   }
 private:
-  std::string sourceName;
+  DataSourceVariant dataSource;
   std::string schemaName;
   miliseconds refreshDelay;
   unsigned row;

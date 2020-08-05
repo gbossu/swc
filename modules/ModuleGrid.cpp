@@ -36,6 +36,36 @@ private:
   const ModuleSize &modSize;
 };
 
+template <typename DataReader>
+static std::unique_ptr<DataForwarderBase>
+makeDefaultForwarder(ModuleBase &module, miliseconds refreshDelay)
+{
+  auto dataForwarder =
+      std::make_unique<DataForwarder<DataReader>>(refreshDelay);
+  dataForwarder->addModuleWithDefaultAction(module);
+  return dataForwarder;
+}
+
+class DataSourceVisitor {
+public:
+  DataSourceVisitor(const ModuleInfo &moduleInfo, ModuleBase &module,
+                    std::vector<std::unique_ptr<DataForwarderBase>> &forwarders)
+      : refreshDelay(moduleInfo.getRefreshDelay()), module(module),
+        forwarders(forwarders) {}
+  void operator()(const dataSources::Cpu &) {
+    forwarders.push_back(std::move(
+        makeDefaultForwarder<utils::CpuUsage>(module, refreshDelay)));
+  }
+  void operator()(const dataSources::Mem &) {
+    forwarders.push_back(std::move(
+        makeDefaultForwarder<utils::MemStatsReader>(module, refreshDelay)));
+  }
+private:
+  miliseconds refreshDelay;
+  ModuleBase &module;
+  std::vector<std::unique_ptr<DataForwarderBase>> &forwarders;
+};
+
 ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
                        const std::string &settingsPath)
 {
@@ -63,19 +93,8 @@ ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
     grid->addWidget(module->getWidget(), moduleInfo.getRow(),
                     moduleInfo.getColumn());
 
-    miliseconds refreshRate = moduleInfo.getRefreshDelay();
-    if (moduleInfo.getSourceName() == "cpu") {
-      auto dataForwarder =
-          std::make_unique<DataForwarder<utils::CpuUsage>>(refreshRate);
-      dataForwarder->addModuleWithDefaultAction(*module);
-      forwarders.push_back(std::move(dataForwarder));
-    } else if (moduleInfo.getSourceName() == "mem") {
-      auto dataForwarder =
-          std::make_unique<DataForwarder<utils::MemStatsReader>>(refreshRate);
-      dataForwarder->addModuleWithDefaultAction(*module);
-      forwarders.push_back(std::move(dataForwarder));
-    } else
-      throw ModuleGridError("Unknown module source");
+    DataSourceVisitor srcVis(moduleInfo, *module, forwarders);
+    std::visit(srcVis, moduleInfo.getDataSource());
     modules.push_back(std::move(module));
   }
 }
