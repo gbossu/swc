@@ -113,6 +113,8 @@ void AnimatedWindowContainer::setupWindowContainer(WId windowId)
                 this, SLOT(containerHidden()));
         connect(visibleState, SIGNAL(entered()),
                 this, SLOT(containerShown()));
+        connect(unfocusedState, SIGNAL(entered()),
+                this, SLOT(containerHidden()));
     }
 }
 

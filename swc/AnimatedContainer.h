@@ -30,6 +30,7 @@ protected:
     QPointer<QStateMachine> slideMachine;
     QState *hiddenState = nullptr;
     QState *visibleState = nullptr;
+    QState *unfocusedState = nullptr;
     std::unique_ptr<Settings> settings;
     QRect minimumGeometry;
     QRect maximumGeometry;

@@ -38,7 +38,7 @@ void AnimatedContainer::initSlideMachine()
   hiddenState->assignProperty(this, "geometry", minimumGeometry);
   visibleState = new QState(slideMachine);
   visibleState->assignProperty(this, "geometry", maximumGeometry);
-  auto unfocusedState = new QState(slideMachine);
+  unfocusedState = new QState(slideMachine);
   unfocusedState->assignProperty(this, "geometry", minimumGeometry);
   slideMachine->setInitialState(hiddenState);
 
