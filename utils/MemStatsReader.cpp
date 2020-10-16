@@ -51,14 +51,12 @@ void MemStatsReader::update()
 
   while (input >> curWord) {
     if (curWord == "MemTotal:") {
-      std::string inUnit;
-      input >> physicalMem.total >> inUnit;
-      convert(physicalMem.total, inUnit, unit);
+      input >> physicalMem.total;
+      physicalMem.total.convert(unit);
       ++found;
     } else if (curWord == "MemAvailable:") {
-      std::string inUnit;
-      input >> physicalMem.available >> inUnit;
-      convert(physicalMem.available, inUnit, unit);
+      input >> physicalMem.available;
+      physicalMem.available.convert(unit);
       ++found;
     } else {
       // Ignore irrelevant lines
@@ -75,8 +73,8 @@ void MemStatsReader::update()
 
 float MemStatsReader::getDefaultValue() const
 {
-  auto usedMem = physicalMem.total - physicalMem.available;
-  return usedMem * 100.f / physicalMem.total;
+  auto usedMem = *physicalMem.total - *physicalMem.available;
+  return usedMem * 100.f / *physicalMem.total;
 }
 
 } // namespace utils
