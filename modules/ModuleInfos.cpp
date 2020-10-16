@@ -16,21 +16,24 @@ ModuleSchema::ModuleSchema(const nlohmann::json &jsonSchema)
     throw ModuleGridError("Unknown schema type " + typeName);
 }
 
-static DataSourceVariant parseDataSource(const std::string &srcString)
+static DataSourceVariant parseDataSource(const nlohmann::json &source)
 {
-  size_t firstPar = srcString.find('(');
-  std::string srcName = srcString.substr(0, firstPar);
-  std::string args;
-  if (firstPar != std::string::npos) {
-    if (srcString.find(')') != srcString.size() - 1)
-      throw ModuleGridError("Could not parse module source.");
-    size_t argsLen = srcString.size() - srcName.size() - 2;
-    args = srcString.substr(firstPar + 1, argsLen);
+  std::string srcName;
+  nlohmann::json args;
+  if (source.is_string()) {
+    source.get_to(srcName);
+  } else if (source.is_object()) {
+    source.at("type").get_to(srcName);
+    args = source.at("args");
+  } else {
+    throw ModuleGridError("Module source should be a string or object.");
   }
 
-  // TODO: handle args
   if (srcName == "cpu") {
     dataSources::Cpu src;
+    for (const nlohmann::json &arg : args) {
+      src.cores.push_back(arg.get<unsigned>());
+    }
     return src;
   }
   if (srcName == "mem") {
@@ -42,7 +45,7 @@ static DataSourceVariant parseDataSource(const std::string &srcString)
 
 ModuleInfo::ModuleInfo(const nlohmann::json &jsonModule)
 {
-  dataSource = parseDataSource(jsonModule.at("src").get<std::string>());
+  dataSource = parseDataSource(jsonModule.at("src"));
   jsonModule.at("schema").get_to(schemaName);
   jsonModule.at("refresh").get_to(refreshDelay);
   jsonModule.at("row").get_to(row);
