@@ -1,5 +1,6 @@
 set(SOURCES
     CPUStatsReader.cpp
+    DataUsage.cpp
     MemStatsReader.cpp)
 
 add_library(utils ${SOURCES})
