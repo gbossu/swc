@@ -2,6 +2,7 @@
 #include "ModuleInfos.h"
 #include "CPUStatsReader.h"
 #include "MemStatsReader.h"
+#include "DiskStatsReader.h"
 #include "Graph.h"
 #include "json.hpp"
 #include <fstream>
@@ -59,6 +60,22 @@ public:
   void operator()(const dataSources::Mem &) {
     forwarders.push_back(std::move(
         makeDefaultForwarder<utils::MemStatsReader>(module, refreshDelay)));
+  }
+  void operator()(const dataSources::Disk &srcInfo) {
+    if (srcInfo.path.empty()) {
+      forwarders.push_back(std::move(
+          makeDefaultForwarder<utils::DiskStatsReader>(module, refreshDelay)));
+      return;
+    }
+
+    auto forwarder = std::make_unique<DataForwarder<utils::DiskStatsReader>>(
+        refreshDelay);
+    forwarder->addModule(
+        module,
+        [&srcInfo](const utils::DiskStatsReader &reader, ModuleBase &module) {
+          module.add(reader.getDiskUsagePercent(srcInfo.path));
+    });
+    forwarders.push_back(std::move(forwarder));
   }
 private:
   miliseconds refreshDelay;
