@@ -55,6 +55,8 @@ ModuleInfo::ModuleInfo(const nlohmann::json &jsonModule)
   jsonModule.at("refresh").get_to(refreshDelay);
   jsonModule.at("row").get_to(row);
   jsonModule.at("column").get_to(column);
+  if (jsonModule.contains("title"))
+    jsonModule.at("title").get_to(title);
 }
 
 ModuleGridInfo::ModuleGridInfo(const nlohmann::json &jsonGrid)

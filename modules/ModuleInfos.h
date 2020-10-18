@@ -89,12 +89,16 @@ public:
   unsigned getColumn() const {
     return column;
   }
+  const std::string &getTitle() const {
+    return title;
+  }
 private:
   DataSourceVariant dataSource;
   std::string schemaName;
   miliseconds refreshDelay;
   unsigned row;
   unsigned column;
+  std::string title;
 };
 
 /// Represents the information gathered from a JSON about a ModuleGrid.
