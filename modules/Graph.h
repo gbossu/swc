@@ -19,6 +19,7 @@ public:
   GraphBase(const ModuleSize &size);
   ~GraphBase();
   QWidget *getWidget() const override;
+  void setTitle(const std::string &title) override;
 
 protected:
   QtCharts::QChart *chart;

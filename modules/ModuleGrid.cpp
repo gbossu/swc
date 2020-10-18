@@ -107,6 +107,7 @@ ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
     ModuleSize modSize;
     SchemaVisitor vis(modSize);
     std::unique_ptr<ModuleBase> module = std::visit(vis, schema.getVariant());
+    module->setTitle(moduleInfo.getTitle());
     grid->addWidget(module->getWidget(), moduleInfo.getRow(),
                     moduleInfo.getColumn());
 

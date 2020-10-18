@@ -49,6 +49,10 @@ QWidget *GraphBase::getWidget() const
   return chartView;
 }
 
+void GraphBase::setTitle(const std::string &title) {
+  chart->setTitle(QString::fromStdString(title));
+}
+
 LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
     : GraphBase(modSize), numPoints(numPoints)
 {

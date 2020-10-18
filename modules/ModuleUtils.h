@@ -20,6 +20,9 @@ public:
 
   /// Returns the Qt widget representing the module.
   virtual QWidget *getWidget() const = 0;
+
+  /// Sets the title which will be displayed with the module.
+  virtual void setTitle(const std::string &title) = 0;
 };
 
 /// Base class for all DataForwarders.
