@@ -40,6 +40,11 @@ static DataSourceVariant parseDataSource(const nlohmann::json &source)
     dataSources::Mem src;
     return src;
   }
+  if (srcName == "disk") {
+    dataSources::Disk src;
+    args.get_to(src.path);
+    return src;
+  }
   throw ModuleGridError("Unknown data source " + srcName);
 }
 
