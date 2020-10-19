@@ -34,6 +34,8 @@ static DataSourceVariant parseDataSource(const nlohmann::json &source)
     for (const nlohmann::json &arg : args) {
       src.cores.push_back(arg.get<unsigned>());
     }
+    if (src.cores.size() > 1)
+      throw ModuleGridError("cpu source: More than one core specified");
     return src;
   }
   if (srcName == "mem") {

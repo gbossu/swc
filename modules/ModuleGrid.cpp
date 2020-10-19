@@ -53,14 +53,30 @@ public:
                     std::vector<std::unique_ptr<DataForwarderBase>> &forwarders)
       : refreshDelay(moduleInfo.getRefreshDelay()), module(module),
         forwarders(forwarders) {}
-  void operator()(const dataSources::Cpu &) {
-    forwarders.push_back(std::move(
-        makeDefaultForwarder<utils::CpuUsage>(module, refreshDelay)));
+
+  void operator()(const dataSources::Cpu &srcInfo) {
+    if (srcInfo.cores.empty()) {
+      forwarders.push_back(std::move(
+          makeDefaultForwarder<utils::CpuUsage>(module, refreshDelay)));
+      return;
+    }
+
+    auto forwarder =
+        std::make_unique<DataForwarder<utils::CpuUsage>>(refreshDelay);
+    auto callback = [&srcInfo](const utils::CpuUsage &reader, ModuleBase &module) {
+      // TODO: support multiple cores
+      unsigned coreIdx = srcInfo.cores.front();
+      module.add(reader.getCoreBusyPercent(coreIdx));
+    };
+    forwarder->addModule(module, callback);
+    forwarders.push_back(std::move(forwarder));
   }
+
   void operator()(const dataSources::Mem &) {
     forwarders.push_back(std::move(
         makeDefaultForwarder<utils::MemStatsReader>(module, refreshDelay)));
   }
+
   void operator()(const dataSources::Disk &srcInfo) {
     if (srcInfo.path.empty()) {
       forwarders.push_back(std::move(
@@ -77,6 +93,7 @@ public:
     });
     forwarders.push_back(std::move(forwarder));
   }
+
 private:
   miliseconds refreshDelay;
   ModuleBase &module;
