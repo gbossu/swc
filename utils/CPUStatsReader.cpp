@@ -19,6 +19,9 @@ static UsageTimes readUsage(std::istream &input) {
   for (size_t idx = 0; idx < times.size(); ++idx)
     input >> times[idx];
 
+  // Ignore remaining numbers
+  input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
   unsigned busyTime = times[USER] + times[NICED] + times[SYSTEM] +
                       times[IOWAIT] + times[IRQ] + times[SOFTIRQ];
   unsigned idleTime = times[IDLE];
@@ -54,7 +57,7 @@ void CpuUsage::update() {
       UsageTimes lastUsage = averageUsage;
       averageUsage = readUsage(ifs);
       averageDiffUsage = averageUsage - lastUsage;
-      if (coresUsage.size() != 0)
+      if (coresUsage.empty())
         break;
     } else {
       auto coreIdx = std::stoul(label.substr(3));
