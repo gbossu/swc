@@ -71,6 +71,11 @@ ModuleGridInfo::ModuleGridInfo(const nlohmann::json &jsonGrid)
     maxRow = std::max(maxRow, modules.back().getRow());
   }
 
+  for (const nlohmann::json &jsonRow : jsonGrid.at("rows")) {
+    auto ratio = jsonRow.get<int>();
+    rowWidths.push_back(ratio);
+  }
+
   for (const nlohmann::json &jsonColumn : jsonGrid.at("columns")) {
     auto ratio = jsonColumn.get<int>();
     columnWidths.push_back(ratio);

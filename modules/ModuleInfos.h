@@ -117,6 +117,12 @@ public:
   /// throws @ref ModuleGridError if it cannot be found.
   const ModuleSchema &getSchema(const std::string &schemaName) const;
 
+
+  /// @return Get the specified stretch factors of rows.
+  const std::vector<int> &getRowsStretchFactors() const {
+    return rowWidths;
+  }
+
   /// @return Get the specified stretch factors of columns.
   const std::vector<int> &getColumnStretchFactors() const {
     return columnWidths;
@@ -129,6 +135,7 @@ private:
   unsigned maxRow = std::numeric_limits<unsigned>::min();
   std::map<std::string, ModuleSchema> moduleSchemas;
   std::vector<ModuleInfo> modules;
+  std::vector<int> rowWidths;
   std::vector<int> columnWidths;
 };
 

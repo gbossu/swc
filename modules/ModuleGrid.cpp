@@ -86,24 +86,29 @@ private:
 ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
                        const std::string &settingsPath)
 {
-  // TODO: support more types of containers
-  // TODO: support auto sizing
-
   gridInfo = createGridInfo(settingsPath);
+
+  // TODO: support auto sizing of the grid based on the modules it contains
   auto *gridWidget = new QWidget(parent);
   gridWidget->resize(gridSize.getOrSquare().toSize());
   auto *grid = new QGridLayout(gridWidget);
 
-  const std::vector<int> &stretchFactors =
+  const std::vector<int> &rowStretchFactors =
+      gridInfo->getRowsStretchFactors();
+  for (size_t idx = 0; idx < rowStretchFactors.size(); ++idx)
+    grid->setRowStretch(idx, rowStretchFactors[idx]);
+
+  const std::vector<int> &columnStretchFactors =
       gridInfo->getColumnStretchFactors();
-  for (size_t idx = 0; idx < stretchFactors.size(); ++idx)
-    grid->setColumnStretch(idx, stretchFactors[idx]);
+  for (size_t idx = 0; idx < columnStretchFactors.size(); ++idx)
+    grid->setColumnStretch(idx, columnStretchFactors[idx]);
 
   for (const ModuleInfo &moduleInfo : *gridInfo) {
     const ModuleSchema &schema =
         gridInfo->getSchema(moduleInfo.getSchemaName());
 
     // TODO: Modules might want to specify their preferred size.
+    // TODO: Modules might want to span over several rows/columns.
     ModuleSize modSize;
     SchemaVisitor vis(modSize);
     std::unique_ptr<ModuleBase> module = std::visit(vis, schema.getVariant());
