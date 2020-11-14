@@ -1,0 +1,89 @@
+[>EXAMPLES]
+.SH MODULE SETTINGS FILE
+When using the \fI-m <file>\fR input option, the given file is expected to characterize the modules to be created in the swc container. These modules can be used to display system metrics (e.g. cpu usage, disk usage, etc.) and are organized in a grid. 
+
+The module settings file adopts the JSON format. It has the following root key-values, which will be documented in sub-sections:
+ - \fI"columns": [int]\fR the list of stretch factors for columns
+ - \fI"rows": [int]\fR the list of stretch factors for rows
+ - \fI"schemas": [obj]\fR a list of Schema objects
+ - \fI"modules": [obj]\fR a list of Module objects
+
+.SS Columns:
+The list of columns has two functions: its size determines the number of column, and the numbers in the list represent the strech factors for each column. For example, \fI[1, 2]\fR means that there are two columns, and that the second one is twice as large as the first one.
+
+.SS Rows:
+The list has the same function as the one above, but for rows.
+
+.SS Schemas:
+Schemas essentially depict a type of module, e.g., a bar graph. A schema object always has the following attributes:
+  {
+    "name": "schemaName",
+    "type": "typeName",
+    Type-specific attributes
+  }
+.TP
+Supported types are the following:
+.TP
+\fBline\fR to create a "line" graph.
+Graphs with multiple lines are currently not supported. Additional attributes are:
+ - \fI"points"=\fR the number of points in the graph
+.TP
+\fBbar\fR to create a bar graph.
+Graphs with multiple bars are currently not supported.
+
+.SS Modules:
+Modules represent one cell in the grid, and could be interpreted as an instance of a schema. A module object always has the following attributes:
+  {
+    "schema": "schemaName",
+    "src": "sourceName" OR sourceObject,
+    "refresh": update delay in ms,
+    "row": row index,
+    "column": column index,
+    optional "title": "moduleTitle"
+  }
+.TP
+The \fIsrc\fR attribute mentions what data the module should display or plot. A source can either be a single string (e.g. "cpu"), or it can be an object when arguments need to be specified. The object has the following structure:
+  {"type": "typeName", "args": type-specific args}
+.TP
+Supported sources are the following:
+.TP
+\fBcpu\fR to get the cpu usage.
+Without arguments, this is the average cpu usage for all cores. Otherwise, "args" is a list of cores for which to get the usage. (Currently, it is only possible to specify one core)
+.TP
+\fBmem\fR to the memory usage.
+Without arguments, this is the physical memory usage. No extra attributes are currently supported.
+.TP
+\fBdisk\fR to the disk usage.
+Without arguments, this is the disk usage of "/". Otherwise, "args" is a string which represents a path.
+
+.SS Example
+  {
+    "rows": [2,3],
+    "columns": [1,2],
+    "schemas": [
+      {
+        "name": "lineGraph",
+        "type": "line",
+        "points": 100,
+        "lineWidth": 5
+      }
+    ],
+    "modules": [
+      {
+        "schema": "lineGraph",
+        "src": {"type": "cpu", "args": [0]},
+        "refresh": 1000,
+        "row": 0,
+        "column": 1,
+        "title": "CPU #0 usage"
+      },
+      {
+        "schema": "lineGraph",
+        "src": "mem",
+        "refresh": 500,
+        "row": 1,
+        "column": 1,
+        "title": "Ram usage"
+      }
+    ]
+  }

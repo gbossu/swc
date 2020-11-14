@@ -13,7 +13,7 @@ target_link_libraries(swc Qt5::Widgets Qt5::DBus xdo modules)
 
 # grenarate the manpage
 add_custom_command(TARGET swc POST_BUILD
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../man/genman.sh ${CMAKE_CURRENT_SOURCE_DIR}/../man/*.h2m
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../man/genman.sh ${CMAKE_CURRENT_SOURCE_DIR}/../man/settingsFile.h2m ${CMAKE_CURRENT_SOURCE_DIR}/../man/moduleSettingsFile.h2m
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Generating swc's manpage")
 
