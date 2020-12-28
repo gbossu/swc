@@ -1,4 +1,5 @@
 #include "CPUStatsReader.h"
+#include "DataFetchError.h"
 #include <fstream>
 #include <array>
 #include <thread>
@@ -41,7 +42,7 @@ CpuUsage::CpuUsage(ReadMode mode)
   try {
     update();
   } catch (const std::out_of_range &e) {
-    throw InitializationError(
+    throw DataFetchError(
         "Could not read the number of CPU cores properly");
   }
 }

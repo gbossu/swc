@@ -21,17 +21,6 @@ public:
     All,
   };
 
-  class InitializationError : public std::exception {
-  public:
-    InitializationError(std::string message)
-        : message(std::move(message)) {}
-    const char *what() const noexcept override {
-      return message.c_str();
-    }
-  private:
-    std::string message;
-  };
-
   CpuUsage(ReadMode mode = All);
 
   void update() override;

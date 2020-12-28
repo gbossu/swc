@@ -1,18 +1,7 @@
 #include "DataUsage.h"
+#include "DataFetchError.h"
 
 namespace utils {
-
-// TODO: have proper exception handling and do not keep defining new ones
-class DataUsageError : public std::exception {
-public:
-  DataUsageError(std::string message)
-      : message(std::move(message)) {}
-  const char *what() const noexcept override {
-    return message.c_str();
-  }
-private:
-  std::string message;
-};
 
 unsigned long long DataQuantity::get(unsigned inUnit) const
 {
@@ -41,7 +30,7 @@ std::istream &operator>>(std::istream &in, DataQuantity &out)
   else if (unitAsStr == "B")
     out.unit = 1;
   else
-    throw DataUsageError("Cannot read number unit.");
+    throw DataFetchError("Cannot read data unit.");
   return in;
 }
 
