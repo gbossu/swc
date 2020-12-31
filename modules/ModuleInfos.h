@@ -64,9 +64,12 @@ struct Mem {
 struct Disk {
   std::string path;
 };
+struct Net {
+  std::string interfaceName;
+};
 } // namespace dataSources
-using DataSourceVariant =
-    std::variant<dataSources::Cpu, dataSources::Mem, dataSources::Disk>;
+using DataSourceVariant = std::variant<
+    dataSources::Cpu, dataSources::Mem, dataSources::Disk, dataSources::Net>;
 
 /// Represents the information gathered from a JSON about a Module.
 /// The goal is to parse the JSON and make sure it is valid, so the ModuleGrid

@@ -47,6 +47,11 @@ static DataSourceVariant parseDataSource(const nlohmann::json &source)
     args.get_to(src.path);
     return src;
   }
+  if (srcName == "net") {
+    dataSources::Net src;
+    args.get_to(src.interfaceName);
+    return src;
+  }
   throw ModuleGridError("Unknown data source " + srcName);
 }
 

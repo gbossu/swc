@@ -3,6 +3,7 @@
 #include "CPUStatsReader.h"
 #include "MemStatsReader.h"
 #include "DiskStatsReader.h"
+#include "NetworkStatsReader.h"
 #include "Graph.h"
 #include "json.hpp"
 #include <fstream>
@@ -41,8 +42,7 @@ template <typename DataReader>
 static std::unique_ptr<DataForwarderBase>
 makeDefaultForwarder(ModuleBase &module, miliseconds refreshDelay)
 {
-  auto dataForwarder =
-      std::make_unique<DataForwarder<DataReader>>(refreshDelay);
+  auto dataForwarder = modules::make_forwarder<DataReader>(refreshDelay);
   dataForwarder->addModuleWithDefaultAction(module);
   return dataForwarder;
 }
@@ -61,8 +61,7 @@ public:
       return;
     }
 
-    auto forwarder =
-        std::make_unique<DataForwarder<utils::CpuUsage>>(refreshDelay);
+    auto forwarder = modules::make_forwarder<utils::CpuUsage>(refreshDelay);
     auto callback = [&srcInfo](const utils::CpuUsage &reader, ModuleBase &module) {
       // TODO: support multiple cores
       unsigned coreIdx = srcInfo.cores.front();
@@ -84,13 +83,20 @@ public:
       return;
     }
 
-    auto forwarder = std::make_unique<DataForwarder<utils::DiskStatsReader>>(
-        refreshDelay);
+    auto forwarder =
+        modules::make_forwarder<utils::DiskStatsReader>(refreshDelay);
     forwarder->addModule(
         module,
         [&srcInfo](const utils::DiskStatsReader &reader, ModuleBase &module) {
           module.add(reader.getDiskUsagePercent(srcInfo.path));
     });
+    forwarders.push_back(std::move(forwarder));
+  }
+
+  void operator()(const dataSources::Net &srcInfo) {
+    auto forwarder = modules::make_forwarder<utils::NetworkStatsReader>(
+        refreshDelay, srcInfo.interfaceName);
+    forwarder->addModuleWithDefaultAction(module);
     forwarders.push_back(std::move(forwarder));
   }
 
