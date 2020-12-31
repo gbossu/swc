@@ -3,6 +3,7 @@
 #include <QtCore/QTimer>
 #include <functional>
 #include <vector>
+#include <memory>
 
 class QWidget;
 
@@ -43,7 +44,7 @@ protected:
   QTimer timer;
 };
 
-template<class DataFetcher>
+template<class DataFetcher, typename... Args>
 class DataForwarder : public DataForwarderBase {
 public:
   using timeoutAction = std::function<void(const DataFetcher &, ModuleBase &)>;
@@ -51,7 +52,7 @@ public:
   /// Constructor
   /// @param interval Time between consecutive runs of the actions defined for
   ///                 this DataForwarder.
-  DataForwarder(miliseconds interval);
+  DataForwarder(miliseconds interval, Args&&... args);
 
   /// Attach a module to this DataForwarder. This means that every time fresh
   /// data is fetched, the action specified by @ref callback will be performed.
@@ -73,9 +74,9 @@ private:
   std::vector<ModuleBase *> modules;
 };
 
-template<class DataFetcher>
-DataForwarder<DataFetcher>::DataForwarder(miliseconds interval)
-    : DataForwarderBase(interval)
+template<class DataFetcher, typename... Args>
+DataForwarder<DataFetcher, Args...>::DataForwarder(miliseconds interval, Args&&... args)
+    : DataForwarderBase(interval), dataReader(std::forward<Args>(args)...)
 {
   QObject::connect(&timer, &QTimer::timeout, [this]() {
     handleTimeout();
@@ -83,9 +84,8 @@ DataForwarder<DataFetcher>::DataForwarder(miliseconds interval)
   timer.start();
 }
 
-
-template<class DataFetcher>
-void DataForwarder<DataFetcher>::handleTimeout()
+template<class DataFetcher, typename... Args>
+void DataForwarder<DataFetcher, Args...>::handleTimeout()
 {
   dataReader.update();
 
@@ -97,8 +97,8 @@ void DataForwarder<DataFetcher>::handleTimeout()
   }
 }
 
-template<class DataFetcher>
-void DataForwarder<DataFetcher>::addModule(ModuleBase &module,
+template<class DataFetcher, typename... Args>
+void DataForwarder<DataFetcher, Args...>::addModule(ModuleBase &module,
                                            timeoutAction callback)
 {
   module.registerDataProvider(dataReader);
@@ -106,12 +106,21 @@ void DataForwarder<DataFetcher>::addModule(ModuleBase &module,
   actions.push_back(callback);
 }
 
-template<class DataFetcher>
-void DataForwarder<DataFetcher>::addModuleWithDefaultAction(ModuleBase &module)
+template<class DataFetcher, typename... Args>
+void DataForwarder<DataFetcher, Args...>::addModuleWithDefaultAction(
+    ModuleBase &module)
 {
   addModule(module, [](const DataFetcher &data, ModuleBase &module) {
     module.add(data.getDefaultValue());
   });
+}
+
+template<class DataFetcher, typename... Args>
+std::unique_ptr<DataForwarder<DataFetcher, Args...>>
+make_forwarder(miliseconds interval, Args&&... args)
+{
+  return std::make_unique<DataForwarder<DataFetcher, Args...>>(
+      interval, std::forward<Args>(args)...);
 }
 
 }
