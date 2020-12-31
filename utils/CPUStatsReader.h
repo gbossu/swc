@@ -47,6 +47,10 @@ public:
     return getAverageBusyPercent();
   }
 
+  std::optional<float> getMaxValue() const override {
+    return 100.f;
+  }
+
 private:
   UsageTimes averageUsage;
   UsageTimes averageDiffUsage;

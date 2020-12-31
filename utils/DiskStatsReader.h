@@ -19,6 +19,10 @@ public:
     return getDiskUsagePercent("/");
   }
 
+  std::optional<float> getMaxValue() const override {
+    return 100.f;
+  }
+
 private:
   unsigned unit = 1000; //1000 <==> kB
 };
