@@ -1,4 +1,5 @@
 #include "Graph.h"
+#include "DataReaderBase.h"
 #include <QGraphicsLayout>
 #include <QtCharts/QBarSeries>
 
@@ -37,6 +38,10 @@ GraphBase::GraphBase(const ModuleSize &modSize)
   // TODO: try to use animations without high CPU usage.
   // chart->setAnimationDuration(500);
   // chart->setAnimationOptions(QtCharts::QChart::SeriesAnimations);
+
+  yAxis = new QtCharts::QValueAxis();
+  yAxis->setLabelsVisible(false);
+  chart->addAxis(yAxis, Qt::AlignLeft);
 }
 
 GraphBase::~GraphBase()
@@ -47,6 +52,26 @@ GraphBase::~GraphBase()
 QWidget *GraphBase::getWidget() const
 {
   return chartView;
+}
+
+void GraphBase::add(float value, unsigned index)
+{
+  assert(index == 0);
+
+  if (!knownMaxValue && value > maxMetValue) {
+    maxMetValue = value;
+    yAxis->setRange(0, value * 1.1f);
+  }
+}
+
+void GraphBase::registerDataProvider(const utils::DataReaderBase &provider, unsigned index)
+{
+  assert(index == 0);
+  knownMaxValue = provider.getMaxValue();
+  if (knownMaxValue.has_value()) {
+    assert(yAxis);
+    yAxis->setRange(0, *knownMaxValue);
+  }
 }
 
 void GraphBase::setTitle(const std::string &title) {
@@ -66,15 +91,12 @@ LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
   xAxis->setRange(0, numPoints - 1);
   chart->addAxis(xAxis, Qt::AlignBottom);
   series->attachAxis(xAxis);
-  auto yAxis = new QtCharts::QValueAxis();
-  yAxis->setLabelsVisible(false);
-  yAxis->setRange(0, 100);
-  chart->addAxis(yAxis, Qt::AlignLeft);
   series->attachAxis(yAxis);
 }
 
 void LineGraph::add(float value, unsigned index)
 {
+  GraphBase::add(value, index);
   assert(index == 0);
 
   // TODO: use totalTime to compute x index
@@ -99,16 +121,12 @@ BarGraph::BarGraph(const ModuleSize &size)
   bar->insert(0, 0);
   series->append(bar);
   chart->addSeries(series);
-
-  auto yAxis = new QtCharts::QValueAxis();
-  yAxis->setLabelsVisible(false);
-  yAxis->setRange(0, 100);
-  chart->addAxis(yAxis, Qt::AlignLeft);
   series->attachAxis(yAxis);
 }
 
 void BarGraph::add(float value, unsigned index)
 {
+  GraphBase::add(value, index);
   assert(index == 0); // Do not handle multiple bars so far.
   bar->replace(0, value);
 }
