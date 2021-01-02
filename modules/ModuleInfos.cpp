@@ -1,4 +1,5 @@
 #include "ModuleInfos.h"
+#include "ModuleInfosDeserialize.h"
 
 namespace modules {
 
@@ -24,7 +25,9 @@ static DataSourceVariant parseDataSource(const nlohmann::json &source)
     source.get_to(srcName);
   } else if (source.is_object()) {
     source.at("type").get_to(srcName);
-    args = source.at("args");
+    // TODO: use named attributes for each dataSource instead of "args".
+    if (source.contains("args"))
+      args = source.at("args");
   } else {
     throw ModuleGridError("Module source should be a string or object.");
   }
@@ -48,9 +51,7 @@ static DataSourceVariant parseDataSource(const nlohmann::json &source)
     return src;
   }
   if (srcName == "net") {
-    dataSources::Net src;
-    args.get_to(src.interfaceName);
-    return src;
+    return source.get<dataSources::Net>();
   }
   throw ModuleGridError("Unknown data source " + srcName);
 }

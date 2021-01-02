@@ -2,6 +2,7 @@ set(SOURCES
     Graph.cpp
     ModuleGrid.cpp
     ModuleInfos.cpp
+    ModuleInfosDeserialize.cpp
     ModuleSize.cpp
     ModuleUtils.cpp)
 

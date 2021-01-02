@@ -95,8 +95,24 @@ public:
 
   void operator()(const dataSources::Net &srcInfo) {
     auto forwarder = modules::make_forwarder<utils::NetworkStatsReader>(
-        refreshDelay, srcInfo.interfaceName);
-    forwarder->addModuleWithDefaultAction(module);
+        refreshDelay, srcInfo.interface);
+    if (!srcInfo.direction.has_value()) {
+      forwarder->addModuleWithDefaultAction(module);
+    } else if (*srcInfo.direction == dataSources::Net::UPLOAD) {
+      forwarder->addModule(
+          module,
+          [](const utils::NetworkStatsReader &reader, ModuleBase &module) {
+            module.add(reader.getCurrentInterfaceStats().sentBytes);
+          });
+    } else if (*srcInfo.direction == dataSources::Net::DOWNLOAD) {
+      forwarder->addModule(
+          module,
+          [](const utils::NetworkStatsReader &reader, ModuleBase &module) {
+            module.add(reader.getCurrentInterfaceStats().receivedBytes);
+          });
+    } else {
+      throw ModuleGridError("Direction must be download or upload.");
+    }
     forwarders.push_back(std::move(forwarder));
   }
 
