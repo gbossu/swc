@@ -30,8 +30,10 @@ protected:
   QtCharts::QChart *chart;
   QtCharts::QChartView *chartView;
   QtCharts::QValueAxis *yAxis;
+
   std::optional<float> knownMaxValue;
   float maxMetValue = std::numeric_limits<float>::min();
+  ModuleAnnotation *maxLabel;
 };
 
 class LineGraph : public GraphBase {

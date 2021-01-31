@@ -39,6 +39,8 @@ GraphBase::GraphBase(const ModuleSize &modSize)
   yAxis = new QtCharts::QValueAxis();
   yAxis->setLabelsVisible(false);
   chart->addAxis(yAxis, Qt::AlignLeft);
+
+  maxLabel = new ModuleAnnotation(*this, Qt::AlignTop | Qt::AlignRight, 0, 1);
 }
 
 GraphBase::~GraphBase()
@@ -59,16 +61,20 @@ void GraphBase::add(float value, unsigned index)
     maxMetValue = value;
     yAxis->setRange(0, value);
     yAxis->applyNiceNumbers();
+    maxLabel->setText(QString::number(yAxis->max()));
   }
 }
 
 void GraphBase::registerDataProvider(const utils::DataReaderBase &provider, unsigned index)
 {
+  // TODO: refactor to registerDataInfo(const DataInfo &, unsigned index)
+  // and provide data range if known, and unit (B, %, etc).
   assert(index == 0);
   knownMaxValue = provider.getMaxValue();
   if (knownMaxValue.has_value()) {
     assert(yAxis);
     yAxis->setRange(0, *knownMaxValue);
+    maxLabel->setText(QString::number(*knownMaxValue));
   }
 }
 
