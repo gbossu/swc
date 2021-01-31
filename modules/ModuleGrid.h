@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include "ModuleUtils.h"
+#include "ModuleBase.h"
 #include "ModuleSize.h"
 
 namespace modules {

@@ -7,7 +7,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QBarSet>
-#include "ModuleUtils.h"
+#include "ModuleBase.h"
 #include "ModuleSize.h"
 
 namespace modules {
