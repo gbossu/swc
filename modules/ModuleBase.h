@@ -1,6 +1,10 @@
 #pragma once
 
+#include <Qt>
+#include <QLabel>
+
 class QWidget;
+class QGridLayout;
 
 namespace utils {
 class DataReaderBase;
@@ -26,6 +30,24 @@ public:
 
   /// Sets the title which will be displayed with the module.
   virtual void setTitle(const std::string &title) = 0;
+
+  /// If it exists, returns the grid used to organize the sub-widgets of
+  /// this Module. Otherwise creates it and sets getWidget() as its parent.
+  /// The grid is used to e.g. add annotations.
+  QGridLayout &getOrCreateInnerGrid();
+
+private:
+  QGridLayout *innerGrid = nullptr;
+};
+
+/// A label to annotate Modules, e.g. a title, axis value...
+/// @param module The Module to annotate
+/// @param align Text alignment
+/// @param row Row number in the Module's inner grid
+/// @param line Line number in the Module's inner grid
+class ModuleAnnotation : public QLabel {
+public:
+  ModuleAnnotation(ModuleBase &module, Qt::Alignment align, int row, int col);
 };
 
 }
