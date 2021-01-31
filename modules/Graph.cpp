@@ -49,9 +49,9 @@ GraphBase::~GraphBase()
   delete chartView;
 }
 
-QWidget *GraphBase::getWidget() const
+QWidget &GraphBase::getWidget() const
 {
-  return chartView;
+  return *chartView;
 }
 
 void GraphBase::add(float value, unsigned index)

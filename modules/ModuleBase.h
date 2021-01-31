@@ -22,7 +22,7 @@ public:
                                     unsigned index = 0U) = 0;
 
   /// Returns the Qt widget representing the module.
-  virtual QWidget *getWidget() const = 0;
+  virtual QWidget &getWidget() const = 0;
 
   /// Sets the title which will be displayed with the module.
   virtual void setTitle(const std::string &title) = 0;

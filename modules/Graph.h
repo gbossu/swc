@@ -23,7 +23,7 @@ public:
   void add(float value, unsigned index) override;
   void registerDataProvider(const utils::DataReaderBase &provider,
                             unsigned index) override;
-  QWidget *getWidget() const override;
+  QWidget &getWidget() const override;
   void setTitle(const std::string &title) override;
 
 protected:
