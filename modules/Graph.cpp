@@ -29,10 +29,7 @@ GraphBase::GraphBase(const ModuleSize &modSize)
   // Note: it seems that setting null margins does not really help,
   // only setting the PlotArea to occupy the whole chart works.
   chart->setMargins(QMargins(0, 0, 0, 0));
-  chart->setContentsMargins(QMargins(0, 0, 0, 0));
   chart->layout()->setContentsMargins(0, 0, 0, 0);
-  chartView->setContentsMargins(QMargins(0, 0, 0, 0));
-
   chart->legend()->hide();
 
   // TODO: try to use animations without high CPU usage.
@@ -60,7 +57,8 @@ void GraphBase::add(float value, unsigned index)
 
   if (!knownMaxValue && value > maxMetValue) {
     maxMetValue = value;
-    yAxis->setRange(0, value * 1.1f);
+    yAxis->setRange(0, value);
+    yAxis->applyNiceNumbers();
   }
 }
 
@@ -75,7 +73,9 @@ void GraphBase::registerDataProvider(const utils::DataReaderBase &provider, unsi
 }
 
 void GraphBase::setTitle(const std::string &title) {
-  chart->setTitle(QString::fromStdString(title));
+  auto *titleAnot =
+      new ModuleAnnotation(*this, Qt::AlignLeft | Qt::AlignTop, 0, 0);
+  titleAnot->setText(QString::fromStdString(title));
 }
 
 LineGraph::LineGraph(const ModuleSize &modSize, size_t numPoints)
