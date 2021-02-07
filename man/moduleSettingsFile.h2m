@@ -43,18 +43,22 @@ Modules represent one cell in the grid, and could be interpreted as an instance 
   }
 .TP
 The \fIsrc\fR attribute mentions what data the module should display or plot. A source can either be a single string (e.g. "cpu"), or it can be an object when arguments need to be specified. The object has the following structure:
-  {"type": "typeName", "args": type-specific args}
+  {"type": "typeName", "arg1": some-value, "arg2": etc.}
 .TP
 Supported sources are the following:
 .TP
 \fBcpu\fR to get the cpu usage.
-Without arguments, this is the average cpu usage for all cores. Otherwise, "args" is a list of cores for which to get the usage. (Currently, it is only possible to specify one core)
+Without arguments, this is the average cpu usage for all cores. Otherwise, a "cores" list argument can enumerate the cores for which to get the usage. (Currently, it is only possible to specify one core)
 .TP
-\fBmem\fR to the memory usage.
+\fBmem\fR to get the memory usage.
 Without arguments, this is the physical memory usage. No extra attributes are currently supported.
 .TP
-\fBdisk\fR to the disk usage.
-Without arguments, this is the disk usage of "/". Otherwise, "args" is a string which represents a path.
+\fBdisk\fR to get the disk usage.
+Without arguments, this is the disk usage of "/". Otherwise, a "path" string argument can be given to point to a specific disk.
+.TP
+\fBnet\fR to get the network usage.
+An "interface" string argument is required to specify the interface name. An optional "direction" string argument can specify "upload" or "download" (default: "download").
+
 
 .SS Example
   {
@@ -71,7 +75,7 @@ Without arguments, this is the disk usage of "/". Otherwise, "args" is a string 
     "modules": [
       {
         "schema": "lineGraph",
-        "src": {"type": "cpu", "args": [0]},
+        "src": {"type": "cpu", "cores": [0]},
         "refresh": 1000,
         "row": 0,
         "column": 1,
