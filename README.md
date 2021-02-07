@@ -91,7 +91,7 @@ The grid is configured thanks to a `grid descriptor` json object. An example of 
     "modules": [
       {
         "schema": "lineGraph",
-        "src": {"type": "cpu", "args": [0]},
+        "src": {"type": "cpu", "cores": [0]},
         "refresh": 1000,
         "row": 0,
         "column": 1,

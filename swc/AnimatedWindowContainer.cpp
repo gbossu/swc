@@ -173,13 +173,13 @@ QSize AnimatedWindowContainer::getWindowSize(WId windowId) const
 void AnimatedWindowContainer::containerShown()
 {
     if (executable)
-        kill(int(executable->pid()), SIGCONT);
+        kill(int(executable->processId()), SIGCONT);
 }
 
 void AnimatedWindowContainer::containerHidden()
 {
     if (executable)
-        kill(int(executable->pid()), SIGSTOP);
+        kill(int(executable->processId()), SIGSTOP);
 }
 
 void AnimatedWindowContainer::closeEvent(QCloseEvent *event)

@@ -3,6 +3,7 @@
 #include "CPUStatsReader.h"
 #include "MemStatsReader.h"
 #include "DiskStatsReader.h"
+#include "NetworkStatsReader.h"
 #include "Graph.h"
 #include "json.hpp"
 #include <fstream>
@@ -41,8 +42,7 @@ template <typename DataReader>
 static std::unique_ptr<DataForwarderBase>
 makeDefaultForwarder(ModuleBase &module, miliseconds refreshDelay)
 {
-  auto dataForwarder =
-      std::make_unique<DataForwarder<DataReader>>(refreshDelay);
+  auto dataForwarder = modules::make_forwarder<DataReader>(refreshDelay);
   dataForwarder->addModuleWithDefaultAction(module);
   return dataForwarder;
 }
@@ -61,8 +61,7 @@ public:
       return;
     }
 
-    auto forwarder =
-        std::make_unique<DataForwarder<utils::CpuUsage>>(refreshDelay);
+    auto forwarder = modules::make_forwarder<utils::CpuUsage>(refreshDelay);
     auto callback = [&srcInfo](const utils::CpuUsage &reader, ModuleBase &module) {
       // TODO: support multiple cores
       unsigned coreIdx = srcInfo.cores.front();
@@ -78,19 +77,42 @@ public:
   }
 
   void operator()(const dataSources::Disk &srcInfo) {
-    if (srcInfo.path.empty()) {
+    if (!srcInfo.path) {
       forwarders.push_back(std::move(
           makeDefaultForwarder<utils::DiskStatsReader>(module, refreshDelay)));
       return;
     }
 
-    auto forwarder = std::make_unique<DataForwarder<utils::DiskStatsReader>>(
-        refreshDelay);
+    auto forwarder =
+        modules::make_forwarder<utils::DiskStatsReader>(refreshDelay);
     forwarder->addModule(
         module,
         [&srcInfo](const utils::DiskStatsReader &reader, ModuleBase &module) {
-          module.add(reader.getDiskUsagePercent(srcInfo.path));
+          module.add(reader.getDiskUsagePercent(*srcInfo.path));
     });
+    forwarders.push_back(std::move(forwarder));
+  }
+
+  void operator()(const dataSources::Net &srcInfo) {
+    auto forwarder = modules::make_forwarder<utils::NetworkStatsReader>(
+        refreshDelay, srcInfo.interface);
+    if (!srcInfo.direction.has_value()) {
+      forwarder->addModuleWithDefaultAction(module);
+    } else if (*srcInfo.direction == dataSources::Net::UPLOAD) {
+      forwarder->addModule(
+          module,
+          [](const utils::NetworkStatsReader &reader, ModuleBase &module) {
+            module.add(reader.getCurrentInterfaceStats().sentBytes);
+          });
+    } else if (*srcInfo.direction == dataSources::Net::DOWNLOAD) {
+      forwarder->addModule(
+          module,
+          [](const utils::NetworkStatsReader &reader, ModuleBase &module) {
+            module.add(reader.getCurrentInterfaceStats().receivedBytes);
+          });
+    } else {
+      throw ModuleGridError("Direction must be download or upload.");
+    }
     forwarders.push_back(std::move(forwarder));
   }
 
@@ -130,7 +152,7 @@ ModuleGrid::ModuleGrid(const ModuleSize &gridSize, QWidget *parent,
     SchemaVisitor vis(modSize);
     std::unique_ptr<ModuleBase> module = std::visit(vis, schema.getVariant());
     module->setTitle(moduleInfo.getTitle());
-    grid->addWidget(module->getWidget(), moduleInfo.getRow(),
+    grid->addWidget(&module->getWidget(), moduleInfo.getRow(),
                     moduleInfo.getColumn());
 
     DataSourceVisitor srcVis(moduleInfo, *module, forwarders);

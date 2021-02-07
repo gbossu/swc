@@ -1,11 +1,13 @@
 #pragma once
 
+#include <optional>
+#include <limits>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QBarSet>
-#include "ModuleUtils.h"
+#include "ModuleBase.h"
 #include "ModuleSize.h"
 
 namespace modules {
@@ -18,12 +20,20 @@ public:
   /// @param size User-defined size requirements (if any).
   GraphBase(const ModuleSize &size);
   ~GraphBase();
-  QWidget *getWidget() const override;
+  void add(float value, unsigned index) override;
+  void registerDataProvider(const utils::DataReaderBase &provider,
+                            unsigned index) override;
+  QWidget &getWidget() const override;
   void setTitle(const std::string &title) override;
 
 protected:
   QtCharts::QChart *chart;
   QtCharts::QChartView *chartView;
+  QtCharts::QValueAxis *yAxis;
+
+  std::optional<float> knownMaxValue;
+  float maxMetValue = std::numeric_limits<float>::min();
+  ModuleAnnotation *maxLabel;
 };
 
 class LineGraph : public GraphBase {

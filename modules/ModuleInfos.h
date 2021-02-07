@@ -5,6 +5,8 @@
 #include <map>
 #include <limits>
 #include <variant>
+
+// TODO: properly integrate nlohmann::json and use forward declarations.
 #include <json.hpp>
 
 namespace modules {
@@ -62,11 +64,25 @@ struct Mem {
   bool swap = false;
 };
 struct Disk {
-  std::string path;
+  std::optional<std::string> path;
 };
+
+struct Net {
+  enum Direction {
+    UPLOAD,
+    DOWNLOAD
+  };
+
+  /// Name for the network interface to analyze
+  std::string interface;
+  /// Direction to analyze: upload or download.
+  std::optional<Direction> direction;
+};
+
 } // namespace dataSources
-using DataSourceVariant =
-    std::variant<dataSources::Cpu, dataSources::Mem, dataSources::Disk>;
+
+using DataSourceVariant = std::variant<
+    dataSources::Cpu, dataSources::Mem, dataSources::Disk, dataSources::Net>;
 
 /// Represents the information gathered from a JSON about a Module.
 /// The goal is to parse the JSON and make sure it is valid, so the ModuleGrid
