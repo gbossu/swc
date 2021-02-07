@@ -64,7 +64,7 @@ struct Mem {
   bool swap = false;
 };
 struct Disk {
-  std::string path;
+  std::optional<std::string> path;
 };
 
 struct Net {

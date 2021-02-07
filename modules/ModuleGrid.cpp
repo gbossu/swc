@@ -77,7 +77,7 @@ public:
   }
 
   void operator()(const dataSources::Disk &srcInfo) {
-    if (srcInfo.path.empty()) {
+    if (!srcInfo.path) {
       forwarders.push_back(std::move(
           makeDefaultForwarder<utils::DiskStatsReader>(module, refreshDelay)));
       return;
@@ -88,7 +88,7 @@ public:
     forwarder->addModule(
         module,
         [&srcInfo](const utils::DiskStatsReader &reader, ModuleBase &module) {
-          module.add(reader.getDiskUsagePercent(srcInfo.path));
+          module.add(reader.getDiskUsagePercent(*srcInfo.path));
     });
     forwarders.push_back(std::move(forwarder));
   }

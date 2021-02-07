@@ -17,38 +17,31 @@ ModuleSchema::ModuleSchema(const nlohmann::json &jsonSchema)
     throw ModuleGridError("Unknown schema type " + typeName);
 }
 
-static DataSourceVariant parseDataSource(const nlohmann::json &source)
+static DataSourceVariant parseDataSource(nlohmann::json source)
 {
   std::string srcName;
-  nlohmann::json args;
+
+  // If source is a string, change it to an empty object, for unified handling.
   if (source.is_string()) {
     source.get_to(srcName);
+    source = nlohmann::json::object();
   } else if (source.is_object()) {
     source.at("type").get_to(srcName);
-    // TODO: use named attributes for each dataSource instead of "args".
-    if (source.contains("args"))
-      args = source.at("args");
   } else {
     throw ModuleGridError("Module source should be a string or object.");
   }
 
   if (srcName == "cpu") {
-    dataSources::Cpu src;
-    for (const nlohmann::json &arg : args) {
-      src.cores.push_back(arg.get<unsigned>());
-    }
+    auto src = source.get<dataSources::Cpu>();
     if (src.cores.size() > 1)
       throw ModuleGridError("cpu source: More than one core specified");
     return src;
   }
   if (srcName == "mem") {
-    dataSources::Mem src;
-    return src;
+    return source.get<dataSources::Mem>();
   }
   if (srcName == "disk") {
-    dataSources::Disk src;
-    args.get_to(src.path);
-    return src;
+    return source.get<dataSources::Disk>();
   }
   if (srcName == "net") {
     return source.get<dataSources::Net>();
